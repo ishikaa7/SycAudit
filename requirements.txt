@@ -1,0 +1,58 @@
+# Core Backend
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+psycopg[binary]
+alembic
+
+# Environment Variables
+python-dotenv
+pydantic
+pydantic-settings
+
+# Authentication
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+
+# Validation & Forms
+email-validator
+python-multipart
+
+# HTTP Requests
+httpx
+requests
+
+
+# AI / LLM APIs
+google-genai
+groq
+huggingface-hub
+transformers
+accelerate
+sentencepiece
+safetensors
+
+# Machine Learning
+torch
+scikit-learn
+numpy
+pandas
+joblib
+
+# NLP
+nltk
+spacy
+
+# Utilities
+tqdm
+rich
+
+# Testing
+pytest
+pytest-asyncio
+
+# Logging
+loguru
