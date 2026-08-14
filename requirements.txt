@@ -1,58 +1,74 @@
+# =========================
 # Core Backend
+# =========================
 fastapi
 uvicorn[standard]
 
+# =========================
 # Database
+# =========================
 sqlalchemy
 psycopg[binary]
+asyncpg
 alembic
 
-# Environment Variables
+# =========================
+# Environment & Configuration
+# =========================
 python-dotenv
 pydantic
 pydantic-settings
 
-# Authentication
+# =========================
+# Authentication & Security
+# =========================
 python-jose[cryptography]
 passlib[bcrypt]
 bcrypt
 
+# =========================
 # Validation & Forms
+# =========================
 email-validator
 python-multipart
 
+# =========================
 # HTTP Requests
+# =========================
 httpx
 requests
 
-
+# =========================
 # AI / LLM APIs
+# =========================
 google-genai
 groq
 huggingface-hub
+
+# =========================
+# Local ML / NLP
+# =========================
 transformers
 accelerate
 sentencepiece
 safetensors
-
-# Machine Learning
 torch
 scikit-learn
 numpy
 pandas
 joblib
-
-# NLP
 nltk
 spacy
 
+# =========================
 # Utilities
+# =========================
 tqdm
 rich
+loguru
 
+# =========================
 # Testing
+# =========================
 pytest
 pytest-asyncio
-
-# Logging
-loguru
