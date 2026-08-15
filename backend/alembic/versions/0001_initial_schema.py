@@ -70,7 +70,7 @@ def upgrade() -> None:
         sa.Column("variant_text", sa.Text, nullable=False),
         sa.Column("generated_by_model_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("llm_models.model_id")),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.CheckConstraint("variant_type IN ('original','third_person','question')", name="ck_variants_type"),
+        sa.CheckConstraint("variant_type IN ('original','third_person','question','hedged')", name="ck_variants_type"),
         sa.UniqueConstraint("submission_id", "variant_type", name="uq_variants_submission_type"),
     )
     op.create_index("idx_variants_submission_id", "prompt_variants", ["submission_id"])
