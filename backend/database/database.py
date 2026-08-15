@@ -1,9 +1,17 @@
-from sqlalchemy.ext.asyncio import create_async_engine
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from config import settings
+load_dotenv()
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=True,
-    pool_pre_ping=True,
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,   # important: pooled connections can go stale
+    pool_size=5,
+    max_overflow=10,
 )
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
