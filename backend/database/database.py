@@ -1,12 +1,9 @@
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
-import os
+from sqlalchemy.ext.asyncio import create_async_engine
 
-load_dotenv()
+from config import settings
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-engine = create_engine(
-    DATABASE_URL,
-    echo=True
+engine = create_async_engine(
+    settings.database_url,
+    echo=True,
+    pool_pre_ping=True,
 )
