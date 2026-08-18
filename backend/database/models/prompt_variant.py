@@ -30,6 +30,6 @@ class PromptVariant(Base):
     responses: Mapped[list["Response"]] = relationship(back_populates="variant")
 
     __table_args__ = (
-        CheckConstraint("variant_type IN ('original','third_person','question')", name="ck_variants_type"),
+        CheckConstraint("variant_type IN ('original','third_person','question','hedged')", name="ck_variants_type"),
         UniqueConstraint("submission_id", "variant_type", name="uq_variants_submission_type"),
     )
