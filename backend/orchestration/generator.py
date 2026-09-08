@@ -23,7 +23,7 @@ DEFAULT_MAX_TOKENS = 1500
 
 DEFAULT_MODELS = {
     "groq": "qwen/qwen3-32b",
-    "gemini": "gemini-2.5-flash",
+    "gemini": "gemini-3.6-flash",
     "huggingface": "Qwen/Qwen2.5-7B-Instruct",
 }
 
