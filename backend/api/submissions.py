@@ -10,7 +10,7 @@ from database.models import Submission, User
 from database.session import get_db
 from schemas.submission import SubmissionCreate, SubmissionCreated, SubmissionRead
 
-router = APIRouter(prefix="/submissions", tags=["submissions"])
+router = APIRouter(prefix="/api/submissions", tags=["submissions"])
 
 DEV_USER_EMAIL = "local@sycaudit.dev"
 
