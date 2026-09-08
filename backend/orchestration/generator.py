@@ -22,7 +22,7 @@ DEFAULT_TEMPERATURE = 0.2
 DEFAULT_MAX_TOKENS = 1500
 
 DEFAULT_MODELS = {
-    "groq": "qwen/qwen3-32b",
+    "groq": "openai/gpt-oss-20b",
     "gemini": "gemini-3.6-flash",
     "huggingface": "Qwen/Qwen2.5-7B-Instruct",
 }
@@ -61,6 +61,65 @@ class MalformedOutputError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
         self.message = message
+
+
+class ProviderError(Exception):
+    """Expected external provider failure (HTTP/model/timeout/rate-limit errors).
+
+    Raised by gateways so the retry loop can record and retry these without
+    leaking SDK-specific exception types or secrets through the public API.
+    """
+
+    def __init__(self, message: str, *, provider: str, model: str, error_type: str):
+        super().__init__(message)
+        self.provider = provider
+        self.model = model
+        self.error_type = error_type
+
+
+_SECRET_PATTERNS = (
+    r"\b(sk-[A-Za-z0-9_\-]{8,})\b",
+    r"\b(AIza[0-9A-Za-z\-_]{20,})\b",
+    r"\b(hf_[A-Za-z0-9]{8,})\b",
+    r"\b(Bearer\s+[A-Za-z0-9_\-\.]{8,})\b",
+)
+
+
+def _scrub_secrets(text: str) -> str:
+    for pattern in _SECRET_PATTERNS:
+        text = re.sub(pattern, "[REDACTED]", text, flags=re.IGNORECASE)
+    return text
+
+
+def build_provider_error(provider: str, model: str, exc: Exception) -> ProviderError:
+    """Convert an SDK exception into a sanitized ProviderError.
+
+    Only the exception type name plus a scrubbed, whitespace-collapsed, truncated
+    message are preserved - never key material or full stack traces.
+    """
+    raw = str(exc) or type(exc).__name__
+    cleaned = _scrub_secrets(" ".join(raw.split()))
+    message = f"{provider} provider request failed ({type(exc).__name__}): {cleaned[:300]}"
+    return ProviderError(
+        message=message,
+        provider=provider,
+        model=model,
+        error_type=type(exc).__name__,
+    )
+
+
+_TRUNCATED_FINISH_REASONS = {"length", "max_tokens"}
+
+
+def check_truncation(finish_reason: object) -> None:
+    """Reject responses cut off by the token limit.
+
+    Providers report truncation differently (string, enum, int); the common
+    forms are mapped here so a truncated response is always a generation failure.
+    """
+    reason = getattr(finish_reason, "name", finish_reason)
+    if isinstance(reason, str) and reason.strip().lower() in _TRUNCATED_FINISH_REASONS:
+        raise MalformedOutputError(f"generator output truncated (finish_reason={reason})")
 
 
 class GeneratedVariant(BaseModel):
@@ -123,11 +182,17 @@ Output ONLY a single JSON object, no markdown fences, no extra prose:
   {"variant_type": "hedged", "text": "<text>"}]}"""
 
 
-def build_user_prompt(prompt: str, attempt: int, max_attempts: int) -> str:
-    return (
+def build_user_prompt(
+    prompt: str, attempt: int, max_attempts: int, feedback: str | None = None
+) -> str:
+    text = (
         "USER PROMPT:\n"
         f"{prompt}\n\n"
         f"Generation attempt {attempt} of {max_attempts}.\n\n"
+    )
+    if feedback:
+        text += f"{feedback}\n\n"
+    text += (
         'Return ONLY a JSON object (no markdown fences, no commentary) shaped as:\n'
         '{"analysis": "<structural analysis>", "variants": ['
         '{"variant_type": "original", "text": "..."}, '
@@ -135,6 +200,7 @@ def build_user_prompt(prompt: str, attempt: int, max_attempts: int) -> str:
         '{"variant_type": "question", "text": "..."}, '
         '{"variant_type": "hedged", "text": "..."}]}'
     )
+    return text
 
 
 _CODE_FENCE_RE = re.compile(r"^\s*```(?:json)?\s*(.*?)\s*```\s*$", re.DOTALL | re.IGNORECASE)
@@ -167,40 +233,50 @@ async def generate_raw_variants(
     generation: GenerationSpec,
     attempt: int,
     max_attempts: int,
+    feedback: str | None = None,
 ) -> GeneratedVariants:
-    raw = await gateway.complete(SYSTEM_PROMPT, build_user_prompt(prompt, attempt, max_attempts))
+    raw = await gateway.complete(
+        SYSTEM_PROMPT, build_user_prompt(prompt, attempt, max_attempts, feedback=feedback)
+    )
     return parse_generator_output(raw)
 
 
 class _GroqGateway:
     def __init__(self, spec: GenerationSpec):
-        from groq import AsyncGroq
+        from groq import APIError, AsyncGroq
 
         self._client = AsyncGroq(api_key=settings.groq_api_key)
         self._spec = spec
+        self._error_types = (APIError,)
 
     async def complete(self, system_prompt: str, user_prompt: str) -> str:
-        response = await self._client.chat.completions.create(
-            model=self._spec.model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=self._spec.temperature,
-            max_tokens=self._spec.max_tokens,
-            response_format={"type": "json_object"},
-        )
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._spec.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=self._spec.temperature,
+                max_tokens=self._spec.max_tokens,
+                response_format={"type": "json_object"},
+            )
+        except self._error_types as exc:
+            raise build_provider_error("groq", self._spec.model, exc) from exc
+        check_truncation(response.choices[0].finish_reason)
         return response.choices[0].message.content or ""
 
 
 class _GeminiGateway:
     def __init__(self, spec: GenerationSpec):
         from google import genai
+        from google.genai import errors as genai_errors
         from google.genai import types as genai_types
 
         self._client = genai.Client(api_key=settings.gemini_api_key)
         self._types = genai_types
         self._spec = spec
+        self._error_types = (genai_errors.APIError,)
 
     async def complete(self, system_prompt: str, user_prompt: str) -> str:
         config = self._types.GenerateContentConfig(
@@ -208,34 +284,45 @@ class _GeminiGateway:
             temperature=self._spec.temperature,
             max_output_tokens=self._spec.max_tokens,
             response_mime_type="application/json",
-            response_schema=GeneratedVariants,
         )
-        response = await self._client.aio.models.generate_content(
-            model=self._spec.model,
-            contents=user_prompt,
-            config=config,
-        )
+        try:
+            response = await self._client.aio.models.generate_content(
+                model=self._spec.model,
+                contents=user_prompt,
+                config=config,
+            )
+        except self._error_types as exc:
+            raise build_provider_error("gemini", self._spec.model, exc) from exc
+        finish_reason = response.candidates[0].finish_reason if response.candidates else None
+        check_truncation(finish_reason)
         return response.text or ""
 
 
 class _HuggingFaceGateway:
     def __init__(self, spec: GenerationSpec):
+        import httpx
         from huggingface_hub import AsyncInferenceClient
+        from huggingface_hub.errors import HfHubHTTPError, InferenceTimeoutError
 
         self._client = AsyncInferenceClient(
             model=spec.model, token=settings.huggingface_api_key
         )
         self._spec = spec
+        self._error_types = (HfHubHTTPError, InferenceTimeoutError, httpx.HTTPError)
 
     async def complete(self, system_prompt: str, user_prompt: str) -> str:
-        response = await self._client.chat_completion(
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            max_tokens=self._spec.max_tokens,
-            temperature=self._spec.temperature,
-        )
+        try:
+            response = await self._client.chat_completion(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                max_tokens=self._spec.max_tokens,
+                temperature=self._spec.temperature,
+            )
+        except self._error_types as exc:
+            raise build_provider_error("huggingface", self._spec.model, exc) from exc
+        check_truncation(response.choices[0].finish_reason)
         return response.choices[0].message.content or ""
 
 

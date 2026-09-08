@@ -14,6 +14,7 @@ from orchestration.generator import (
     ChatGateway,
     GenerationSpec,
     MalformedOutputError,
+    ProviderError,
     build_gateway,
     generate_raw_variants,
     infer_provider,
@@ -21,6 +22,27 @@ from orchestration.generator import (
 from orchestration.validator import ValidationResult, validate_variants
 
 VARIANT_TYPES = ("original", "third_person", "question", "hedged")
+
+MAX_RETRY_FEEDBACK_ISSUES = 8
+
+
+def _format_retry_feedback(validation: ValidationResult, failed_attempt: int) -> str | None:
+    """Concise, structured retry feedback derived from the validator.
+
+    Only error-severity issues are included; the prompt stays the immutable
+    source of truth and is never allowed to be changed by this feedback.
+    """
+    issues = [i for i in validation.issues if i.severity == "error"][:MAX_RETRY_FEEDBACK_ISSUES]
+    if not issues:
+        return None
+    lines = "\n".join(f"- {i.code} [{i.variant_type}]: {i.message}" for i in issues)
+    return (
+        f"PREVIOUS ATTEMPT {failed_attempt} FAILED DETERMINISTIC VALIDATION. "
+        "Correct every issue listed below in your new output:\n"
+        f"{lines}\n"
+        "Keep the source prompt byte-for-byte in the 'original' variant, preserve "
+        "every entity, number, date and the full intent, and never answer the prompt."
+    )
 
 
 @dataclass(frozen=True)
@@ -78,6 +100,7 @@ async def generate_variants(
     last_validation: ValidationResult | None = None
     last_analysis = ""
     last_variants: tuple[Variant, ...] = ()
+    retry_feedback: str | None = None
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
@@ -87,9 +110,15 @@ async def generate_variants(
                 generation=spec,
                 attempt=attempt,
                 max_attempts=MAX_ATTEMPTS,
+                feedback=retry_feedback,
             )
         except MalformedOutputError as exc:
             failures.append(f"attempt {attempt}: malformed generator output: {exc}")
+            continue
+        except ProviderError as exc:
+            failures.append(
+                f"attempt {attempt}: provider error ({exc.provider} / {exc.model}): {exc}"
+            )
             continue
 
         candidates = tuple(Variant(v.variant_type, v.text) for v in raw.variants)
@@ -114,6 +143,7 @@ async def generate_variants(
                 metadata=metadata,
             )
 
+        retry_feedback = _format_retry_feedback(result, attempt)
         last_validation = result
         last_analysis = raw.analysis
         last_variants = candidates

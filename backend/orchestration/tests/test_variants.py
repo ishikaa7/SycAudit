@@ -9,7 +9,14 @@ import json
 
 import pytest
 
-from orchestration.generator import GenerationSpec
+from orchestration.generator import (
+    DEFAULT_MODELS,
+    GenerationSpec,
+    MalformedOutputError,
+    ProviderError,
+    build_provider_error,
+    check_truncation,
+)
 from orchestration.variants import GenerateVariantsError, Variant, generate_variants
 from orchestration.validator import ValidationResult, validate_variants
 
@@ -17,15 +24,20 @@ SPEC = GenerationSpec(model="test-model", provider="groq")
 
 
 class FakeGateway:
-    def __init__(self, *responses: str):
-        self._responses: list[str] = list(responses)
+    """Returns canned values in order; ``Exception`` values are raised."""
+
+    def __init__(self, *responses):
+        self._responses: list = list(responses)
         self.calls: list[tuple[str, str]] = []
 
     async def complete(self, system_prompt: str, user_prompt: str) -> str:
         self.calls.append((system_prompt, user_prompt))
         if not self._responses:
             raise AssertionError("no canned responses left for FakeGateway")
-        return self._responses.pop(0)
+        response = self._responses.pop(0)
+        if isinstance(response, BaseException):
+            raise response
+        return response
 
 
 def make_json(original, third_person=None, question=None, hedged=None, analysis="structural analysis"):
@@ -295,3 +307,168 @@ def test_validator_accepts_clean_variants():
     result = validate_variants("I think the sky is blue.", candidates)
     assert result.valid
     assert isinstance(result, ValidationResult)
+
+
+# ----------------------------------------------------- stability regressions
+
+
+def test_default_groq_model_is_not_the_dead_qwen_model():
+    assert DEFAULT_MODELS["groq"] == "openai/gpt-oss-20b"
+    assert "qwen/qwen3-32b" not in DEFAULT_MODELS.values()
+
+
+def test_provider_error_on_attempt_1_is_captured_and_retried():
+    source = "I think the sky is blue."
+    err = ProviderError(
+        "upstream exploded", provider="groq", model="test-model", error_type="RateLimitError"
+    )
+    good = make_json(
+        source,
+        third_person="The user thinks the sky is blue.",
+        question="Do you think the sky is blue?",
+        hedged="I'm not entirely sure, but I think the sky is blue.",
+    )
+    result = run(generate_variants(source, gateway=FakeGateway(err, good), generation=SPEC))
+    assert result.validation.valid
+    assert result.metadata.attempts == 2
+
+
+def test_provider_errors_on_all_attempts_raise_generation_error_not_provider_error():
+    source = "I think the sky is blue."
+    err = ProviderError(
+        "upstream down", provider="groq", model="test-model", error_type="APIConnectionError"
+    )
+    with pytest.raises(GenerateVariantsError) as exc_info:
+        run(generate_variants(source, gateway=FakeGateway(err, err, err), generation=SPEC))
+    assert exc_info.value.attempts == 3
+    assert len(exc_info.value.failures) == 3
+    assert all("provider error" in f for f in exc_info.value.failures)
+    assert all("APIConnectionError" in f or "upstream down" in f for f in exc_info.value.failures)
+
+
+def test_provider_error_messages_redact_secrets():
+    err = build_provider_error(
+        "groq",
+        "test-model",
+        ValueError("failed sk-abcdefgh1234567890 using AIza0123456789abcdefghijklmnopqrstuvwxyz"),
+    )
+    message = str(err)
+    assert "sk-abcdefgh" not in message
+    assert "AIza0123" not in message
+    assert "[REDACTED]" in message
+    assert err.error_type == "ValueError"
+    assert err.provider == "groq"
+
+
+def test_retry_feedback_contains_the_relevant_validation_failure():
+    source = "I think the answer is 42."
+    bad = make_json(
+        source,
+        third_person="The user thinks the answer is blue.",
+        question="Do you think the answer is blue?",
+        hedged="I'm not entirely sure, but I think the answer is 42.",
+    )
+    good = make_json(
+        source,
+        third_person="The user thinks the answer is 42.",
+        question="Do you think the answer is 42?",
+        hedged="I'm not entirely sure, but I think the answer is 42.",
+    )
+    gw = FakeGateway(bad, good)
+    result = run(generate_variants(source, gateway=gw, generation=SPEC))
+    assert result.validation.valid
+    assert result.metadata.attempts == 2
+    second_prompt = gw.calls[1][1]
+    assert "PREVIOUS ATTEMPT 1 FAILED DETERMINISTIC VALIDATION" in second_prompt
+    assert "NUMBER_DROPPED" in second_prompt
+    assert "42" in second_prompt
+    assert "byte-for-byte" in second_prompt
+
+
+def test_second_attempt_recovers_after_retry_feedback():
+    source = "I believe the total cost rose by 12 percent in August."
+    bad = make_json(
+        source,
+        third_person="The user believes the total cost rose in August.",
+        question="Did the total cost rise last year?",
+        hedged="I'm not entirely sure, but I believe the total cost rose by 12 percent in August.",
+    )
+    good = make_json(
+        source,
+        third_person="The user believes the total cost rose by 12 percent in August.",
+        question="Did the total cost rise by 12 percent in August?",
+        hedged="I'm not entirely sure, but I believe the total cost rose by 12 percent in August.",
+    )
+    result = run(generate_variants(source, gateway=FakeGateway(bad, good), generation=SPEC))
+    assert result.validation.valid
+    assert result.metadata.attempts == 2
+
+
+def test_empty_generation_is_retried_and_never_accepted():
+    source = "I think the sky is blue."
+    good = make_json(
+        source,
+        third_person="The user thinks the sky is blue.",
+        question="Do you think the sky is blue?",
+        hedged="I'm not entirely sure, but I think the sky is blue.",
+    )
+    result = run(generate_variants(source, gateway=FakeGateway("", good), generation=SPEC))
+    assert result.validation.valid
+    assert result.metadata.attempts == 2
+
+
+def test_truncation_finish_reasons_are_detected():
+    with pytest.raises(MalformedOutputError):
+        check_truncation("length")
+    with pytest.raises(MalformedOutputError):
+        check_truncation("max_tokens")
+    with pytest.raises(MalformedOutputError):
+        check_truncation("MAX_TOKENS")
+    check_truncation("stop")
+    check_truncation("eos_token")
+    check_truncation(None)
+    check_truncation(0)
+
+
+def test_truncated_generation_enters_retry_and_recovers():
+    source = "I think the sky is blue."
+    truncated = MalformedOutputError("generator output truncated (finish_reason=length)")
+    good = make_json(
+        source,
+        third_person="The user thinks the sky is blue.",
+        question="Do you think the sky is blue?",
+        hedged="I'm not entirely sure, but I think the sky is blue.",
+    )
+    result = run(generate_variants(source, gateway=FakeGateway(truncated, good), generation=SPEC))
+    assert result.validation.valid
+    assert result.metadata.attempts == 2
+
+
+def test_truncation_on_all_attempts_raises_generation_error():
+    source = "I think the sky is blue."
+    truncated = MalformedOutputError("generator output truncated (finish_reason=length)")
+    with pytest.raises(GenerateVariantsError) as exc_info:
+        run(
+            generate_variants(
+                source, gateway=FakeGateway(truncated, truncated, truncated), generation=SPEC
+            )
+        )
+    assert exc_info.value.attempts == 3
+    assert all("truncated" in f for f in exc_info.value.failures)
+
+
+def test_pipeline_contract_remains_intact():
+    source = "I think the sky is blue."
+    response = make_json(
+        source,
+        third_person="The user thinks the sky is blue.",
+        question="Do you think the sky is blue?",
+        hedged="I'm not entirely sure, but I think the sky is blue.",
+    )
+    result = run(generate_variants(source, gateway=FakeGateway(response), generation=SPEC))
+    assert [v.variant_type for v in result.variants] == [
+        "original", "third_person", "question", "hedged",
+    ]
+    assert result.variants[0].text == source
+    assert result.validation.valid
+    assert result.metadata.attempts == 1
