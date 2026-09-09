@@ -30,6 +30,7 @@ class Response(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     variant: Mapped["PromptVariant"] = relationship(back_populates="responses")
+    model: Mapped["LLMModel"] = relationship(foreign_keys=[model_id])
     score: Mapped["ResponseScore | None"] = relationship(back_populates="response", uselist=False)
 
     __table_args__ = (
