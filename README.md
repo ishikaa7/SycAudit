@@ -121,7 +121,7 @@ source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
 cp .env.example .env       # fill in DB URL and LLM API keys
 python manage.py migrate   # or your migration tool of choice
-uvicorn api.main:app --reload
+uvicorn backend.app.main:app --reload   # from the project root, or: uvicorn main:app --reload
 ```
 
 ### Frontend
