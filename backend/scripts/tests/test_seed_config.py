@@ -20,6 +20,16 @@ def test_seed_has_exactly_four_responder_models():
     }
 
 
+def test_seed_budgets_are_set_per_model():
+    budgets = {(m["provider"], m["model_name"]): m["max_tokens"] for m in SEED_MODELS}
+    assert budgets == {
+        ("groq", "openai/gpt-oss-20b"): 2500,
+        ("groq", "openai/gpt-oss-120b"): 3000,
+        ("gemini", "gemini-3.6-flash"): 2500,
+        ("huggingface", "Qwen/Qwen2.5-72B-Instruct"): 1024,
+    }
+
+
 def test_retired_models_are_not_seeded_or_recreated():
     seed_names = {(m["provider"], m["model_name"]) for m in SEED_MODELS}
     assert ("gemini", "gemini-2.5-flash") not in seed_names

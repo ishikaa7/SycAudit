@@ -9,7 +9,7 @@ import asyncio
 
 import pytest
 
-from orchestration.generator import ProviderError
+from orchestration.generator import MalformedOutputError, ProviderError
 
 from responders.gateway import (
     RESPONDER_SYSTEM_PROMPT,
@@ -137,6 +137,30 @@ def test_token_usage_metadata_is_captured_when_present():
     assert result.total_tokens == 46
 
 
+def test_chat_completion_can_carry_thoughts_tokens():
+    completion = ChatCompletion("answer", thoughts_tokens=619)
+    assert completion.thoughts_tokens == 619
+    assert ChatCompletion("answer").thoughts_tokens is None
+
+
+def test_thoughts_tokens_is_preserved_on_responder_result():
+    spec = make_specs(1)[0]
+    gateway = FakeResponderGateway("answer", usage={"thoughts_tokens": 250})
+    result = run(respond("hello", gateway=gateway, spec=spec))
+
+    assert result.status == "success"
+    assert result.thoughts_tokens == 250
+
+
+def test_thoughts_tokens_is_none_when_absent():
+    spec = make_specs(1)[0]
+    gateway = FakeResponderGateway("answer")
+    result = run(respond("hello", gateway=gateway, spec=spec))
+
+    assert result.status == "success"
+    assert result.thoughts_tokens is None
+
+
 def test_token_usage_metadata_is_none_when_absent():
     spec = make_specs(1)[0]
     gateway = FakeResponderGateway("answer")
@@ -157,6 +181,24 @@ def test_partial_token_usage_keeps_missing_counts_none():
     assert result.prompt_tokens is None
     assert result.completion_tokens is None
     assert result.total_tokens == 50
+
+
+def test_finish_reason_is_captured_when_present():
+    spec = make_specs(1)[0]
+    gateway = FakeResponderGateway("answer", usage={"finish_reason": "stop"})
+    result = run(respond("hello", gateway=gateway, spec=spec))
+
+    assert result.status == "success"
+    assert result.finish_reason == "stop"
+
+
+def test_finish_reason_is_none_when_absent():
+    spec = make_specs(1)[0]
+    gateway = FakeResponderGateway("answer")
+    result = run(respond("hello", gateway=gateway, spec=spec))
+
+    assert result.status == "success"
+    assert result.finish_reason is None
 
 
 def test_batch_carries_token_usage_metadata():
@@ -376,6 +418,104 @@ def test_gemini_inflated_total_is_normalized_to_sum(monkeypatch):
     assert completion.prompt_tokens == 37
     assert completion.completion_tokens == 108
     assert completion.total_tokens == 145
+    assert completion.finish_reason == "stop"
+
+
+def test_gemini_thoughts_token_count_is_extracted_when_present(monkeypatch):
+    pytest.importorskip("google.genai")
+    from types import SimpleNamespace
+
+    monkeypatch.setattr("config.settings.gemini_api_key", "test-key")
+
+    class FakeModels:
+        async def generate_content(self, model, contents, config):
+            return SimpleNamespace(
+                text="gemini answer",
+                candidates=[SimpleNamespace(finish_reason="STOP")],
+                usage_metadata=SimpleNamespace(
+                    prompt_token_count=51,
+                    candidates_token_count=963,
+                    total_token_count=2099,
+                    thoughts_token_count=1085,
+                ),
+            )
+
+    class FakeAio:
+        models = FakeModels()
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.aio = FakeAio()
+
+    gateway = build_responder_gateway(ResponderSpec(provider="gemini", model="m"))
+    monkeypatch.setattr(gateway, "_client", FakeClient())
+
+    completion = run(gateway.complete("sys", "user"))
+
+    assert completion.thoughts_tokens == 1085
+    assert completion.completion_tokens == 963
+    assert completion.total_tokens == 1014
+
+
+def test_gemini_truncated_completion_is_kept_when_opt_in(monkeypatch):
+    pytest.importorskip("google.genai")
+    from types import SimpleNamespace
+
+    monkeypatch.setattr("config.settings.gemini_api_key", "test-key")
+
+    class FakeModels:
+        async def generate_content(self, model, contents, config):
+            return SimpleNamespace(
+                text="partial gemini answer",
+                candidates=[SimpleNamespace(finish_reason="MAX_TOKENS")],
+                usage_metadata=None,
+            )
+
+    class FakeAio:
+        models = FakeModels()
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.aio = FakeAio()
+
+    gateway = build_responder_gateway(
+        ResponderSpec(provider="gemini", model="m", keep_truncated=True)
+    )
+    monkeypatch.setattr(gateway, "_client", FakeClient())
+
+    completion = run(gateway.complete("sys", "user"))
+
+    assert completion.text == "partial gemini answer"
+    assert completion.finish_reason == "max_tokens"
+    assert completion.thoughts_tokens is None
+
+
+def test_gemini_truncated_completion_raises_by_default(monkeypatch):
+    pytest.importorskip("google.genai")
+    from types import SimpleNamespace
+
+    monkeypatch.setattr("config.settings.gemini_api_key", "test-key")
+
+    class FakeModels:
+        async def generate_content(self, model, contents, config):
+            return SimpleNamespace(
+                text="partial gemini answer",
+                candidates=[SimpleNamespace(finish_reason="MAX_TOKENS")],
+                usage_metadata=None,
+            )
+
+    class FakeAio:
+        models = FakeModels()
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.aio = FakeAio()
+
+    gateway = build_responder_gateway(ResponderSpec(provider="gemini", model="m"))
+    monkeypatch.setattr(gateway, "_client", FakeClient())
+
+    with pytest.raises(MalformedOutputError):
+        run(gateway.complete("sys", "user"))
 
 
 def test_groq_totals_pass_through_normalized(monkeypatch):
@@ -410,3 +550,4 @@ def test_groq_totals_pass_through_normalized(monkeypatch):
 
     assert completion.text == "groq answer"
     assert (completion.prompt_tokens, completion.completion_tokens, completion.total_tokens) == (12, 34, 46)
+    assert completion.finish_reason == "stop"

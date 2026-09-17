@@ -18,10 +18,10 @@ from database.models import LLMModel
 from database.session import AsyncSessionLocal
 
 SEED_MODELS = [
-    {"provider": "groq", "model_name": "openai/gpt-oss-20b", "rate_limit_rpm": 30},
-    {"provider": "groq", "model_name": "openai/gpt-oss-120b", "rate_limit_rpm": 30},
-    {"provider": "gemini", "model_name": "gemini-3.6-flash", "rate_limit_rpm": 10},
-    {"provider": "huggingface", "model_name": "Qwen/Qwen2.5-72B-Instruct", "rate_limit_rpm": 15},
+    {"provider": "groq", "model_name": "openai/gpt-oss-20b", "rate_limit_rpm": 30, "max_tokens": 2500},
+    {"provider": "groq", "model_name": "openai/gpt-oss-120b", "rate_limit_rpm": 30, "max_tokens": 3000},
+    {"provider": "gemini", "model_name": "gemini-3.6-flash", "rate_limit_rpm": 10, "max_tokens": 2500},
+    {"provider": "huggingface", "model_name": "Qwen/Qwen2.5-72B-Instruct", "rate_limit_rpm": 15, "max_tokens": 1024},
 ]
 
 # Rows that must never be active responders again. Kept in the table (FK safety)
@@ -52,6 +52,7 @@ async def _insert_missing(session, existing: set[tuple[str, str]]) -> None:
             provider=m["provider"],
             model_name=m["model_name"],
             rate_limit_rpm=m["rate_limit_rpm"],
+            max_tokens=m["max_tokens"],
         )
         for m in missing
     )
@@ -106,6 +107,22 @@ async def _remove_stale(session, existing: set[tuple[str, str]]) -> None:
         print(f"removed stale: {provider}/{model_name}")
 
 
+async def _apply_max_tokens(session) -> None:
+    for m in SEED_MODELS:
+        rows = (
+            await session.execute(
+                select(LLMModel).where(
+                    LLMModel.provider == m["provider"],
+                    LLMModel.model_name == m["model_name"],
+                )
+            )
+        ).scalars().all()
+        for row in rows:
+            if row.max_tokens != m["max_tokens"]:
+                row.max_tokens = m["max_tokens"]
+                print(f"budget set: {row.provider}/{row.model_name} -> {m['max_tokens']}")
+
+
 async def seed() -> None:
     async with AsyncSessionLocal() as session:
         existing = await _existing_keys(session)
@@ -113,6 +130,7 @@ async def seed() -> None:
         await _ensure_active(session)
         await _retire(session)
         await _remove_stale(session, existing)
+        await _apply_max_tokens(session)
         await session.commit()
 
         active = (

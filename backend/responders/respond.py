@@ -50,6 +50,8 @@ class ResponderResult:
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
     total_tokens: int | None = None
+    finish_reason: str | None = None
+    thoughts_tokens: int | None = None
 
     @property
     def ok(self) -> bool:
@@ -145,6 +147,8 @@ async def respond(
                 prompt_tokens=completion.prompt_tokens,
                 completion_tokens=completion.completion_tokens,
                 total_tokens=completion.total_tokens,
+                finish_reason=completion.finish_reason,
+                thoughts_tokens=completion.thoughts_tokens,
             )
         if attempt < max_attempts:
             await sleep(0.25 * attempt)

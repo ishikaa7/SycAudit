@@ -1,3 +1,4 @@
 .env
 __pycache__/
 *.pyc
+backend/responders/benchmarks/results/

@@ -43,12 +43,18 @@ class ChatCompletion:
     populated when the provider exposes them - never fabricated. ``total`` is
     normalized to the sum of prompt + completion whenever both are known, and
     otherwise stays the provider's lone reported total (or ``None``).
+
+    ``finish_reason`` is the provider's completion-stop reason (e.g. ``stop``,
+    ``length``/``max_tokens``), normalized to a lowercase string via the
+    ``.name`` of enums - populated only when the provider exposes it.
     """
 
     text: str
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
     total_tokens: int | None = None
+    finish_reason: str | None = None
+    thoughts_tokens: int | None = None
 
 
 def normalize_token_counts(
@@ -79,6 +85,20 @@ def _optional_int(value) -> int | None:
     return int(value)
 
 
+def _optional_finish_reason(finish_reason: object) -> str | None:
+    """Normalize any provider's finish reason into a lowercase string or ``None``.
+
+    Mirrors the ``.name``-aware mapping used by ``check_truncation`` so enum
+    reasons (gemini ``FinishReason.STOP``) and plain strings resolve the same way.
+    """
+    if finish_reason is None:
+        return None
+    reason = getattr(finish_reason, "name", finish_reason)
+    if reason is None:
+        return None
+    return str(reason).strip().lower() or None
+
+
 @dataclass(frozen=True)
 class ResponderSpec:
     provider: str = ""
@@ -86,6 +106,10 @@ class ResponderSpec:
     temperature: float = RESPONDER_TEMPERATURE
     max_tokens: int = RESPONDER_MAX_TOKENS
     rpm: int | None = None
+    # Benchmark opt-in ONLY: when True, a truncated response is returned as a
+    # ChatCompletion (with its text/tokens/finish_reason) instead of raising.
+    # Production callers never set this; the default keeps prior behavior.
+    keep_truncated: bool = False
 
     @property
     def name(self) -> str:
@@ -149,7 +173,9 @@ class _GroqResponderGateway:
             )
         except self._error_types as exc:
             raise build_provider_error("groq", self._spec.model, exc) from exc
-        check_truncation(response.choices[0].finish_reason)
+        finish_reason = _optional_finish_reason(response.choices[0].finish_reason)
+        if not self._spec.keep_truncated:
+            check_truncation(response.choices[0].finish_reason)
         usage = getattr(response, "usage", None)
         prompt, completion, total = normalize_token_counts(
             _optional_int(getattr(usage, "prompt_tokens", None)),
@@ -161,6 +187,7 @@ class _GroqResponderGateway:
             prompt_tokens=prompt,
             completion_tokens=completion,
             total_tokens=total,
+            finish_reason=finish_reason,
         )
 
 
@@ -189,8 +216,11 @@ class _GeminiResponderGateway:
             )
         except self._error_types as exc:
             raise build_provider_error("gemini", self._spec.model, exc) from exc
-        finish_reason = response.candidates[0].finish_reason if response.candidates else None
-        check_truncation(finish_reason)
+        finish_reason = _optional_finish_reason(
+            response.candidates[0].finish_reason if response.candidates else None
+        )
+        if not self._spec.keep_truncated:
+            check_truncation(finish_reason)
         metadata = getattr(response, "usage_metadata", None)
         prompt, completion, total = normalize_token_counts(
             _optional_int(getattr(metadata, "prompt_token_count", None)),
@@ -202,6 +232,10 @@ class _GeminiResponderGateway:
             prompt_tokens=prompt,
             completion_tokens=completion,
             total_tokens=total,
+            finish_reason=finish_reason,
+            thoughts_tokens=_optional_int(
+                getattr(metadata, "thoughts_token_count", None)
+            ),
         )
 
 
@@ -229,7 +263,9 @@ class _HuggingFaceResponderGateway:
             )
         except self._error_types as exc:
             raise build_provider_error("huggingface", self._spec.model, exc) from exc
-        check_truncation(response.choices[0].finish_reason)
+        finish_reason = _optional_finish_reason(response.choices[0].finish_reason)
+        if not self._spec.keep_truncated:
+            check_truncation(response.choices[0].finish_reason)
         usage = getattr(response, "usage", None)
         prompt, completion, total = normalize_token_counts(
             _optional_int(getattr(usage, "prompt_tokens", None)),
@@ -241,6 +277,7 @@ class _HuggingFaceResponderGateway:
             prompt_tokens=prompt,
             completion_tokens=completion,
             total_tokens=total,
+            finish_reason=finish_reason,
         )
 
 
