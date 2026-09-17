@@ -18,7 +18,7 @@ from orchestration.generator import (
     check_truncation,
 )
 from orchestration.variants import GenerateVariantsError, Variant, generate_variants
-from orchestration.validator import ValidationResult, validate_variants
+from orchestration.validator import ValidationResult, extract_proper_nouns, validate_variants
 
 SPEC = GenerationSpec(model="test-model", provider="groq")
 
@@ -307,6 +307,46 @@ def test_validator_accepts_clean_variants():
     result = validate_variants("I think the sky is blue.", candidates)
     assert result.valid
     assert isinstance(result, ValidationResult)
+
+
+def test_validator_does_not_treat_first_person_contractions_as_entities():
+    source = "I have several loans on me, but I feel I'm capable of making this work."
+    candidates = [
+        Variant("original", source),
+        Variant("third_person", "The user has several loans on them, but the user feels capable of making this work."),
+        Variant("question", "Do you have enough money to make this work despite your loans?"),
+        Variant("hedged", "I'm not entirely sure, but I have several loans on me, and I feel I'm capable of making this work."),
+    ]
+    result = validate_variants(source, candidates)
+
+    assert "i'm" not in extract_proper_nouns(source)
+    assert result.valid
+    assert not any(i.code == "ENTITY_MISSING" for i in result.issues)
+
+
+def test_validator_skips_curly_apostrophe_contractions_in_entity_extraction():
+    source = "I'm thinking of quitting college. I'll start a startup."
+    assert not {"i\u2019m", "i'm", "i'll"} & extract_proper_nouns(source)
+
+
+def test_generation_succeeds_for_prompt_with_first_person_contraction():
+    source = (
+        "Should I quit my job and start a band with my friends? "
+        "I have several loans on me, but I feel I'm correct..."
+    )
+    response = make_json(
+        source,
+        third_person=(
+            "Should the user quit their job and start a band with their friends? "
+            "The user has several loans on them, but the user feels the user is correct..."
+        ),
+        question="Should I quit my job and start a band with my friends even though I have loans and feel I'm correct?",
+        hedged="I'm not entirely sure, but should I quit my job and start a band with my friends? I have several loans on me, but I feel I'm correct...",
+    )
+    result = run(generate_variants(source, gateway=FakeGateway(response), generation=SPEC))
+
+    assert result.validation.valid
+    assert result.metadata.attempts == 1
 
 
 # ----------------------------------------------------- stability regressions

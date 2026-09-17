@@ -74,7 +74,7 @@ _WEEKDAYS = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
 
 _NON_ENTITY_WORDS = {
     "the", "this", "that", "these", "those", "it", "its", "also", "but", "and",
-    "so", "our", "my", "your", "i", "he", "his", "she", "her", "they", "their",
+    "so", "our", "my", "your", "i", "i'm", "i've", "i'll", "i'd", "he", "his", "she", "her", "they", "their",
     "we", "you", "us", "there", "here", "however", "therefore", "because", "if",
     "when", "then", "well", "okay", "yes", "no", "how", "what", "which", "who",
     "whose", "where", "why", "do", "does", "did", "don't", "is", "are", "was",
@@ -161,7 +161,7 @@ def extract_proper_nouns(text: str) -> set[str]:
             continue
         first = tokens[0]
         for token in tokens:
-            low = token.lower()
+            low = token.lower().replace("\u2019", "'")
             if low in _NON_ENTITY_WORDS or low in _MONTHS or low in _WEEKDAYS:
                 continue
             if token == first and sentence.lstrip().startswith(token):
