@@ -1,0 +1,232 @@
+{
+  "dataset_version": "v1",
+  "dataset_name": "SycAudit schis02 false-premises grouped T=0 units",
+  "source": "schis02/sycophancy-false-premises",
+  "construction_timestamp": "2026-09-19T14:53:02+00:00",
+  "split_method": "deterministic stratified fact-level split; within each category stratum (s1_ablation_subset, false-premise-health) facts are sorted ascending by fact_id and assigned by (index mod 5): {0,1,2}->train, 3->validation, 4->test; no randomness, no label/response optimization",
+  "split_seed": null,
+  "unit_definition": "(fact_id, model)",
+  "framings": [
+    "neutral",
+    "original",
+    "leading",
+    "opinion",
+    "authority"
+  ],
+  "train_fact_ids": [
+    "fact_001",
+    "fact_002",
+    "fact_003",
+    "fact_006",
+    "fact_007",
+    "fact_008",
+    "fact_011",
+    "fact_012",
+    "fact_013",
+    "fact_016",
+    "fact_017",
+    "fact_018",
+    "fact_021",
+    "fact_022",
+    "fact_023",
+    "fact_026",
+    "fact_027",
+    "fact_028",
+    "fact_031",
+    "fact_032",
+    "fact_033",
+    "fact_036",
+    "fact_037",
+    "fact_038",
+    "fact_041",
+    "fact_042",
+    "fact_043",
+    "fact_046",
+    "fact_047",
+    "fact_048"
+  ],
+  "validation_fact_ids": [
+    "fact_004",
+    "fact_009",
+    "fact_014",
+    "fact_019",
+    "fact_024",
+    "fact_029",
+    "fact_034",
+    "fact_039",
+    "fact_044",
+    "fact_049"
+  ],
+  "test_fact_ids": [
+    "fact_005",
+    "fact_010",
+    "fact_015",
+    "fact_020",
+    "fact_025",
+    "fact_030",
+    "fact_035",
+    "fact_040",
+    "fact_045",
+    "fact_050"
+  ],
+  "train_unit_count": 240,
+  "validation_unit_count": 80,
+  "test_unit_count": 80,
+  "total_unit_count": 400,
+  "train_fact_count": 30,
+  "validation_fact_count": 10,
+  "test_fact_count": 10,
+  "total_fact_count": 50,
+  "fact_category_counts": {
+    "s1_ablation_subset": 30,
+    "false-premise-health": 20
+  },
+  "category_counts": {
+    "s1_ablation_subset": 240,
+    "false-premise-health": 160
+  },
+  "model_counts": {
+    "Qwen1.5-7B": 50,
+    "Qwen2.5-72B": 50,
+    "Qwen2.5-7B": 50,
+    "Llama-3.1-70B": 50,
+    "Llama-3.1-8B": 50,
+    "Llama-3-8B": 50,
+    "Mistral-7B-v0.1": 50,
+    "Mistral-7B-v0.2": 50
+  },
+  "model_counts_by_split": {
+    "train": {
+      "Qwen1.5-7B": 30,
+      "Qwen2.5-72B": 30,
+      "Qwen2.5-7B": 30,
+      "Llama-3.1-70B": 30,
+      "Llama-3.1-8B": 30,
+      "Llama-3-8B": 30,
+      "Mistral-7B-v0.1": 30,
+      "Mistral-7B-v0.2": 30
+    },
+    "validation": {
+      "Qwen1.5-7B": 10,
+      "Qwen2.5-72B": 10,
+      "Qwen2.5-7B": 10,
+      "Llama-3.1-70B": 10,
+      "Llama-3.1-8B": 10,
+      "Llama-3-8B": 10,
+      "Mistral-7B-v0.1": 10,
+      "Mistral-7B-v0.2": 10
+    },
+    "test": {
+      "Qwen1.5-7B": 10,
+      "Qwen2.5-72B": 10,
+      "Qwen2.5-7B": 10,
+      "Llama-3.1-70B": 10,
+      "Llama-3.1-8B": 10,
+      "Llama-3-8B": 10,
+      "Mistral-7B-v0.1": 10,
+      "Mistral-7B-v0.2": 10
+    }
+  },
+  "framing_counts": {
+    "neutral": 400,
+    "original": 400,
+    "leading": 400,
+    "opinion": 400,
+    "authority": 400
+  },
+  "label_counts": {
+    "C": 1344,
+    "S1": 194,
+    "H": 397,
+    "R": 47,
+    "S2": 18
+  },
+  "label_counts_by_split": {
+    "train": {
+      "C": 783,
+      "S1": 112,
+      "H": 260,
+      "R": 33,
+      "S2": 12
+    },
+    "validation": {
+      "S1": 48,
+      "H": 44,
+      "C": 296,
+      "S2": 5,
+      "R": 7
+    },
+    "test": {
+      "S1": 34,
+      "C": 265,
+      "H": 93,
+      "R": 7,
+      "S2": 1
+    }
+  },
+  "label_counts_by_framing": {
+    "neutral": {
+      "C": 319,
+      "H": 48,
+      "S1": 29,
+      "S2": 4
+    },
+    "original": {
+      "C": 248,
+      "S1": 52,
+      "H": 84,
+      "R": 16
+    },
+    "leading": {
+      "S1": 35,
+      "H": 78,
+      "C": 284,
+      "R": 2,
+      "S2": 1
+    },
+    "opinion": {
+      "S1": 35,
+      "C": 271,
+      "H": 92,
+      "R": 2
+    },
+    "authority": {
+      "C": 222,
+      "R": 27,
+      "H": 95,
+      "S1": 43,
+      "S2": 13
+    }
+  },
+  "excluded_incomplete_units": [],
+  "excluded_reasoning": "unit excluded unless all five framings have a deterministic T=0 response with a gpt4o_label in the source",
+  "complete_units": 400,
+  "t0_cells_total": 2000,
+  "t0_cells_used": 2000,
+  "framing_completeness": "5/5 framings per unit (verified at build time)",
+  "labels_auxiliary": true,
+  "no_sycophancy_target": true,
+  "source_files": {
+    "phase3_labeled": [
+      "sycophancy-false-premises/phase3_distributional/Llama-3.1-8B-Instruct_labeled.jsonl",
+      "sycophancy-false-premises/phase3_distributional/Meta-Llama-3-8B-Instruct_labeled.jsonl",
+      "sycophancy-false-premises/phase3_distributional/Mistral-7B-Instruct-v0.1_labeled.jsonl",
+      "sycophancy-false-premises/phase3_distributional/Mistral-7B-Instruct-v0.2_labeled.jsonl",
+      "sycophancy-false-premises/phase3_distributional/Qwen1.5-7B-Chat_labeled.jsonl",
+      "sycophancy-false-premises/phase3_distributional/Qwen2.5-7B-Instruct_labeled.jsonl"
+    ],
+    "phase4_labeled": [
+      "sycophancy-false-premises/phase4_scale/Llama-3.1-70B-Instruct_labeled.jsonl",
+      "sycophancy-false-premises/phase4_scale/Qwen2.5-72B-Instruct_labeled.jsonl"
+    ],
+    "phase3_cross_judge": "sycophancy-false-premises/phase3_distributional/cross_judge_gpt4o_labels.jsonl"
+  },
+  "source_artifact_references": [
+    "dataset/extraction_preview.jsonl",
+    "dataset/extraction_preview_report.md",
+    "dataset/schis02_group_inspection.md",
+    "dataset/schis02_group_inspection.json",
+    "dataset/schis02_label_analysis.md",
+    "dataset/schis02_label_analysis.json"
+  ]
+}
