@@ -2,3 +2,9 @@
 __pycache__/
 *.pyc
 backend/responders/benchmarks/results/
+# ---- pushed-repo hygiene: keep GitHub friendly (code+docs only) ----
+# Bulk intermediates: > GitHub 100 MB hard limit (1225 MB ds2_candidates)
+dataset/extracted/*_candidates.jsonl
+dataset/extracted/duplicate_report.jsonl
+.venv/
+frontend/node_modules/

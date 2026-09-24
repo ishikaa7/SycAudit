@@ -6,9 +6,11 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class SubmissionCreate(BaseModel):
-    original_prompt: str = Field(min_length=1)
+# schemas/submission.py
+MAX_PROMPT_CHARS = 2000
 
+class SubmissionCreate(BaseModel):
+    original_prompt: str = Field(min_length=1, max_length=MAX_PROMPT_CHARS)
 
 class SubmissionCreated(BaseModel):
     model_config = ConfigDict(from_attributes=True)
