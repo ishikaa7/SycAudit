@@ -8,9 +8,3 @@ dataset/extracted/*_candidates.jsonl
 dataset/extracted/duplicate_report.jsonl
 .venv/
 frontend/node_modules/
-# Local SycAudit Ollama annotation outputs
-dataset/combined/ollama_annotation/production/
-dataset/combined/ollama_annotation/calibration/
-dataset/combined/ollama_annotation/test_results/
-
-test_ollama_qwen.py
