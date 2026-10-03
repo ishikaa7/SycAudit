@@ -1,41 +1,49 @@
-export const FACETS = [
-  { key: "agreement", label: "Agreement" },
-  { key: "flattery", label: "Flattery" },
-  { key: "avoiding_disagreement", label: "Avoiding Disagreement" },
-  { key: "preference_alignment", label: "Preference Alignment" },
-  { key: "validation_seeking", label: "Validation Seeking" },
-];
-
-export const VARIANT_ORDER = [
-  { key: "original", label: "Original" },
-  { key: "question", label: "Question" },
-  { key: "third_person", label: "Third-Person" },
-  { key: "hedged", label: "Hedged" },
-];
+/**
+ * Status / stability presentation metadata.
+ *
+ * FACET and VARIANT definitions and all severity-threshold logic now live in
+ * utils/scoring.js so there is a single source of truth. The re-exports at the
+ * bottom are kept so existing imports keep working.
+ */
+import { FACET_DEFS, VARIANT_DEFS } from "./scoring.js";
 
 export const STATUS_META = {
   pending: {
     label: "Pending",
-    badge: "bg-slate-100 text-slate-600 ring-slate-200",
-    dot: "bg-slate-400",
+    badge: "bg-stone-100 text-stone-600 ring-stone-200",
+    dot: "bg-stone-400",
     pulse: false,
   },
   processing: {
     label: "Processing",
-    badge: "bg-amber-100 text-amber-700 ring-amber-200",
-    dot: "bg-amber-500",
+    badge: "bg-butter-50 text-butter-900 ring-butter-200",
+    dot: "bg-butter-500",
     pulse: true,
   },
+  /* Submission.status value. */
   completed: {
     label: "Completed",
-    badge: "bg-emerald-100 text-emerald-700 ring-emerald-200",
-    dot: "bg-emerald-500",
+    badge: "bg-olive-50 text-olive-800 ring-olive-200",
+    dot: "bg-olive-500",
+    pulse: false,
+  },
+  /* Response.status value for a successful model call. */
+  success: {
+    label: "Completed",
+    badge: "bg-olive-50 text-olive-800 ring-olive-200",
+    dot: "bg-olive-500",
     pulse: false,
   },
   failed: {
     label: "Failed",
-    badge: "bg-red-100 text-red-700 ring-red-200",
-    dot: "bg-red-500",
+    badge: "bg-burgundy-50 text-burgundy-800 ring-burgundy-200",
+    dot: "bg-burgundy-500",
+    pulse: false,
+  },
+  timeout: {
+    label: "Timed out",
+    badge: "bg-burgundy-50 text-burgundy-800 ring-burgundy-200",
+    dot: "bg-burgundy-500",
     pulse: false,
   },
 };
@@ -43,57 +51,36 @@ export const STATUS_META = {
 export const STABILITY_META = {
   low: {
     label: "Stable",
-    detail: "Low wobble — coherent across framings, trustworthy",
-    chip: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    detail: "Low wobble — coherent across framings, more trustworthy.",
+    chip: "bg-olive-50 text-olive-800 ring-olive-200",
   },
   moderate: {
     label: "Moderately stable",
-    detail: "Moderate wobble — answers drift across framings",
-    chip: "bg-amber-50 text-amber-700 ring-amber-200",
+    detail: "Moderate wobble — answers drift across framings.",
+    chip: "bg-butter-50 text-butter-900 ring-butter-200",
   },
   high: {
     label: "Unstable",
-    detail: "High wobble — answers shift heavily by framing",
-    chip: "bg-red-50 text-red-700 ring-red-200",
+    detail: "High wobble — answers shift heavily by framing.",
+    chip: "bg-burgundy-50 text-burgundy-800 ring-burgundy-200",
   },
 };
 
-export const SCORE_HEX = { low: "#059669", mid: "#d97706", high: "#dc2626" };
-export const SCORE_TEXT = {
-  low: "text-emerald-700",
-  mid: "text-amber-700",
-  high: "text-red-600",
-};
-export const SCORE_BG = {
-  low: "bg-emerald-50",
-  mid: "bg-amber-50",
-  high: "bg-red-50",
-};
-export const SCORE_RING = {
-  low: "ring-emerald-200",
-  mid: "ring-amber-200",
-  high: "ring-red-200",
-};
+/** @deprecated import from utils/scoring.js instead */
+export const FACETS = FACET_DEFS.map((f) => ({ key: f.key, label: f.label, id: f.id }));
 
-export function severityLevel(value, max = 5) {
-  const ratio = max > 0 ? value / max : 0;
-  if (ratio < 0.4) return "low";
-  if (ratio < 0.7) return "mid";
-  return "high";
-}
+/** @deprecated import VARIANT_DEFS from utils/scoring.js instead */
+export const VARIANT_ORDER = VARIANT_DEFS.map((v) => ({
+  key: v.key,
+  label: v.sublabel,
+  letter: v.letter,
+}));
 
-export function scoreHex(value, max = 5) {
-  return SCORE_HEX[severityLevel(value, max)];
-}
-
-export function scoreText(value, max = 5) {
-  return SCORE_TEXT[severityLevel(value, max)];
-}
-
-export function scoreBg(value, max = 5) {
-  return SCORE_BG[severityLevel(value, max)];
-}
-
-export function scoreRing(value, max = 5) {
-  return SCORE_RING[severityLevel(value, max)];
-}
+export {
+  severityLevel,
+  scoreHex,
+  scoreTextClass as scoreText,
+  BACKEND_SCORE_MAX,
+  DISPLAY_SCORE_MAX,
+  toDisplayScore,
+} from "./scoring.js";

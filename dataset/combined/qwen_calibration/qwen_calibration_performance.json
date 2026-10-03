@@ -1,0 +1,12 @@
+{
+  "requests": 1,
+  "success": 1,
+  "failed": 0,
+  "retries": 0,
+  "malformed": 0,
+  "latency_avg": 4.36,
+  "latency_median": 4.36,
+  "latency_max": 4.36,
+  "prompt_tokens": 5322,
+  "completion_tokens": 464
+}

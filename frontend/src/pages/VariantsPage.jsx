@@ -1,0 +1,267 @@
+import { useMemo, useState } from "react";
+import { useSubmissionContext } from "../components/layout/SubmissionLayout.jsx";
+import SubmissionHeader from "../components/results/SubmissionHeader.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
+import ModelTabs from "../components/ui/ModelTabs.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import ScoreBadge from "../components/ui/ScoreBadge.jsx";
+import FacetBars from "../components/ui/FacetBars.jsx";
+import StatusBadge from "../components/ui/StatusBadge.jsx";
+import {
+  VARIANT_BY_KEY,
+  VARIANT_DEFS,
+  buildMatrix,
+  collectModels,
+  facetFillPct,
+  formatBackScore,
+  formatDisplayScore,
+  isScoredResponse,
+  isFailedResponse,
+  responseLatencyLabel,
+  responseProvider,
+  responseTokenLabel,
+  scoreHex,
+  toDisplayScore,
+} from "../utils/scoring.js";
+
+/** Full response body with a character count, copy-free but selectable. */
+function ResponseBody({ response }) {
+  const text = response?.response_text;
+  if (!text) {
+    return (
+      <p className="text-[13px] text-stone-400">No response text was stored for this model.</p>
+    );
+  }
+  return (
+    <div className="rounded-xl border border-stone-100 bg-cream-50 p-3.5">
+      <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-stone-800">{text}</p>
+      <p className="meta-text mt-2">{text.length.toLocaleString()} characters</p>
+    </div>
+  );
+}
+
+function ResponseCard({ row, isRecommended }) {
+  const { response } = row;
+  // Backend stores a successful call as status "success" (not "completed").
+  const failed = isFailedResponse(response);
+  const score = row.finalScore;
+
+  return (
+    <article className="rounded-xl border border-stone-200 bg-white p-4 transition-all duration-200 hover:shadow-card-hover sm:p-5">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[14px] font-semibold text-stone-900">{row.modelName}</p>
+            <span className="chip-static">{responseProvider(response)}</span>
+            {isRecommended && (
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-olive-50 px-2 py-1 text-[11px] font-bold text-olive-800 ring-1 ring-inset ring-olive-200">
+                Least sycophantic
+              </span>
+            )}
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <StatusBadge status={response?.status} />
+            {responseLatencyLabel(response) && (
+              <span className="meta-text">{responseLatencyLabel(response)}</span>
+            )}
+            {responseTokenLabel(response) && (
+              <span className="meta-text">{responseTokenLabel(response)}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-3">
+          <ScoreBadge backScore={score} />
+          <div className="text-right">
+            <p
+              className="text-2xl font-bold tabular-nums leading-none"
+              style={{ color: isScoredResponse(response) ? scoreHex(score) : undefined }}
+            >
+              {isScoredResponse(response) ? formatDisplayScore(score) : "N/A"}
+            </p>
+            <p className="meta-text mt-1">/ 100</p>
+          </div>
+        </div>
+      </header>
+
+      {failed ? (
+        <div className="mt-3.5 rounded-xl border border-burgundy-100 bg-burgundy-50 px-3.5 py-3">
+          <p className="text-[12.5px] font-semibold text-burgundy-900">This model call failed</p>
+          {response?.error_message && (
+            <p className="mt-1 text-[12.5px] leading-relaxed text-burgundy-800">
+              {response.error_message}
+            </p>
+          )}
+          <p className="mt-1.5 text-[11.5px] text-burgundy-700/80">
+            No score is available for a failed response. This state is preserved from the backend.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-3.5">
+          <ResponseBody response={response} />
+        </div>
+      )}
+
+      {row.scored && (
+        <div className="mt-4 border-t border-stone-100 pt-4">
+          <FacetBars score={response.score} />
+          <p className="meta-text mt-3">
+            Raw final_score {formatBackScore(score)} / 5 · normalized ×20 for the /100 display
+          </p>
+        </div>
+      )}
+    </article>
+  );
+}
+
+/** Compact prompt-framing bar showing this model's score across four framings. */
+function VariantBar({ label, sublabel, value, present, isRecommended }) {
+  const pct = present ? facetFillPct(value) : 0;
+  const hex = present ? scoreHex(value) : "#e7e5e4";
+  return (
+    <div className="min-w-0">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="truncate text-[12.5px] font-semibold text-stone-700">
+          {label}
+          <span className="ml-1.5 font-normal text-stone-400">{sublabel}</span>
+        </span>
+        <span className="shrink-0 text-[11.5px] tabular-nums text-stone-500">
+          {present ? toDisplayScore(value)?.toFixed(0) : "—"}
+        </span>
+      </div>
+      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-cream-200">
+        {present && (
+          <div
+            className="h-full origin-left animate-grow-in rounded-full"
+            style={{ width: `${pct}%`, backgroundColor: hex, opacity: isRecommended ? 1 : 0.8 }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function VariantsPage() {
+  const { submission } = useSubmissionContext();
+  const models = useMemo(() => collectModels(submission), [submission]);
+  const [activeModel, setActiveModel] = useState(null);
+
+  const modelName = activeModel ?? models[0]?.name ?? null;
+  const rows = useMemo(() => buildMatrix(submission), [submission]);
+  const modelRows = useMemo(
+    () => rows.filter((r) => r.modelName === modelName),
+    [rows, modelName]
+  );
+
+  const counts = useMemo(() => {
+    const map = {};
+    rows.forEach((r) => {
+      map[r.modelName] = (map[r.modelName] ?? 0) + 1;
+    });
+    return map;
+  }, [rows]);
+
+  const recId = submission?.report?.recommended_response_id;
+
+  return (
+    <div className="animate-fade-up">
+      <PageHeader
+        eyebrow="Variants & responses"
+        title="Prompt framings and model responses"
+        subtitle="Four framings of the same prompt, with each model's response and facet scores. Models are listed only if they appear in this submission."
+      />
+
+      <SubmissionHeader submission={submission} />
+
+      {models.length === 0 ? (
+        <EmptyState
+          icon="doc"
+          title="No model responses in this submission"
+          subtitle="Nothing has been stored against this submission yet. Scores and responses will appear once the models respond."
+        />
+      ) : (
+        <>
+          <div className="mb-5">
+            <ModelTabs models={models} active={modelName} onChange={setActiveModel} counts={counts} />
+          </div>
+
+          <section className="card mb-6 p-4 sm:p-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="section-title">Score across all four framings</p>
+              <p className="meta-text">{modelName}</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {VARIANT_DEFS.map((v) => {
+                const row = modelRows.find((r) => r.variantKey === v.key);
+                const present = row?.scored && row.finalScore !== null;
+                const isRec = present && String(row.response?.response_id) === String(recId);
+                return (
+                  <VariantBar
+                    key={v.key}
+                    label={v.label}
+                    sublabel={v.sublabel}
+                    value={row?.finalScore}
+                    present={present}
+                    isRecommended={isRec}
+                  />
+                );
+              })}
+            </div>
+          </section>
+
+          <div className="flex flex-col gap-6">
+            {VARIANT_DEFS.map((v) => {
+              const row = modelRows.find((r) => r.variantKey === v.key);
+              const def = VARIANT_BY_KEY[v.key];
+              return (
+                <section key={v.key} className="card overflow-hidden">
+                  <header className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 bg-cream-50 px-4 py-3 sm:px-5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-burgundy-700 text-[11px] font-bold text-white">
+                        {def.letter}
+                      </span>
+                      <div>
+                        <h2 className="text-[14px] font-semibold text-stone-900">
+                          {def.label} — {def.sublabel}
+                        </h2>
+                        <p className="meta-text">{modelName}</p>
+                      </div>
+                    </div>
+                    {row?.scored && (
+                      <ScoreBadge backScore={row.finalScore} label={`${formatDisplayScore(row.finalScore)} / 100`} />
+                    )}
+                  </header>
+
+                  <div className="p-4 sm:p-5">
+                    <div className="mb-3.5">
+                      <p className="eyebrow">Prompt sent to the model</p>
+                      <p className="mt-1.5 whitespace-pre-wrap rounded-xl border border-stone-100 bg-cream-50 p-3.5 text-[13.5px] leading-relaxed text-stone-800">
+                        {row?.variantText || "No prompt text stored for this framing."}
+                      </p>
+                    </div>
+
+                    {row ? (
+                      <ResponseCard
+                        row={row}
+                        isRecommended={
+                          row.response?.response_id != null &&
+                          String(row.response.response_id) === String(recId)
+                        }
+                      />
+                    ) : (
+                      <EmptyState
+                        compact
+                        title={`${modelName} has no response for ${def.label}`}
+                        subtitle="The backend did not store a response for this model and framing combination."
+                      />
+                    )}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

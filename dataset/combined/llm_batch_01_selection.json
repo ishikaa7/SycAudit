@@ -1,0 +1,161 @@
+{
+  "seed": 42,
+  "target": 50,
+  "sources": {
+    "camilablank": {
+      "target": 10,
+      "selected": 10,
+      "framing": {
+        "unframed": 10
+      },
+      "models": {
+        "": 10
+      },
+      "categories": {
+        "(none)": 10
+      }
+    },
+    "ds1": {
+      "target": 10,
+      "selected": 10,
+      "framing": {
+        "(none)": 10
+      },
+      "models": {
+        "llama3": 1,
+        "meta-llama/Meta-Llama-3-8B-Instruct": 2,
+        "Mistral v0.2": 1,
+        "llama31": 1,
+        "Qwen/Qwen2.5-7B-Instruct": 1,
+        "Qwen/Qwen1.5-7B-Chat": 1,
+        "mistralai/Mistral-7B-Instruct-v0.1": 2,
+        "meta-llama/Llama-3.1-70B-Instruct": 1
+      },
+      "categories": {
+        "(none)": 10
+      }
+    },
+    "ds2": {
+      "target": 10,
+      "selected": 10,
+      "framing": {
+        "(none)": 10
+      },
+      "models": {
+        "Qwen3.5-35B-A3B_no_thinking": 8,
+        "Qwen2.5-14B-Instruct": 2
+      },
+      "categories": {
+        "(none)": 10
+      }
+    },
+    "ds3": {
+      "target": 10,
+      "selected": 10,
+      "framing": {
+        "(none)": 10
+      },
+      "models": {
+        "": 8,
+        "Qwen3.5-35B-A3B-FP8": 2
+      },
+      "categories": {
+        "(none)": 10
+      }
+    },
+    "schis02": {
+      "target": 10,
+      "selected": 10,
+      "framing": {
+        "opinion": 2,
+        "leading": 2,
+        "original": 2,
+        "neutral": 2,
+        "authority": 2
+      },
+      "models": {
+        "mistralai/Mistral-7B-Instruct-v0.2": 1,
+        "Qwen/Qwen1.5-7B-Chat": 3,
+        "Qwen/Qwen2.5-72B-Instruct": 2,
+        "Qwen/Qwen2.5-7B-Instruct": 1,
+        "mistralai/Mistral-7B-Instruct-v0.1": 1,
+        "meta-llama/Llama-3.1-8B-Instruct": 2
+      },
+      "categories": {
+        "s1_ablation_subset": 6,
+        "false-premise-health": 4
+      }
+    }
+  },
+  "relaxations": [],
+  "ids": [
+    "sycaudit__camilablank_c921bad19a51a8",
+    "sycaudit__camilablank_472251f8290394",
+    "sycaudit__camilablank_0d5479b5ca000e",
+    "sycaudit__camilablank_0ac6dbd67cc11a",
+    "sycaudit__camilablank_24d49cc58c3b5d",
+    "sycaudit__camilablank_be35e7856f1d64",
+    "sycaudit__camilablank_9c43c804361123",
+    "sycaudit__camilablank_7edf1bdaef922b",
+    "sycaudit__camilablank_c28a12f1f1d4e0",
+    "sycaudit__camilablank_a4f48eeeabff30",
+    "ishika__ds1-000041",
+    "ishika__ds1-000239",
+    "ishika__ds1-000134",
+    "ishika__ds1-000083",
+    "ishika__ds1-000564",
+    "ishika__ds1-000470",
+    "ishika__ds1-000332",
+    "ishika__ds1-000220",
+    "ishika__ds1-000627",
+    "ishika__ds1-000373",
+    "ishika__ds2-000619",
+    "ishika__ds2-000616",
+    "ishika__ds2-000528",
+    "ishika__ds2-000697",
+    "ishika__ds2-000204",
+    "ishika__ds2-000637",
+    "ishika__ds2-000033",
+    "ishika__ds2-000415",
+    "ishika__ds2-000598",
+    "ishika__ds2-000554",
+    "ishika__ds3-000085",
+    "ishika__ds3-000325",
+    "ishika__ds3-000046",
+    "ishika__ds3-000337",
+    "ishika__ds3-000308",
+    "ishika__ds3-000340",
+    "ishika__ds3-000490",
+    "ishika__ds3-000670",
+    "ishika__ds3-000278",
+    "ishika__ds3-000530",
+    "sycaudit__schis02_f8a02a17f2dffc",
+    "sycaudit__schis02_a09a66d47d7134",
+    "sycaudit__schis02_f2cfb8b06353f6",
+    "sycaudit__schis02_86ace4069d1f22",
+    "sycaudit__schis02_72867296501887",
+    "sycaudit__schis02_8e67bb013bef78",
+    "sycaudit__schis02_4beaeccb2456ca",
+    "sycaudit__schis02_db41d044597042",
+    "sycaudit__schis02_6df8ac8873d4a1",
+    "sycaudit__schis02_ec53cfe6e67942"
+  ],
+  "prompts_distinct": 50,
+  "models": [
+    "",
+    "Mistral v0.2",
+    "Qwen/Qwen1.5-7B-Chat",
+    "Qwen/Qwen2.5-72B-Instruct",
+    "Qwen/Qwen2.5-7B-Instruct",
+    "Qwen2.5-14B-Instruct",
+    "Qwen3.5-35B-A3B-FP8",
+    "Qwen3.5-35B-A3B_no_thinking",
+    "llama3",
+    "llama31",
+    "meta-llama/Llama-3.1-70B-Instruct",
+    "meta-llama/Llama-3.1-8B-Instruct",
+    "meta-llama/Meta-Llama-3-8B-Instruct",
+    "mistralai/Mistral-7B-Instruct-v0.1",
+    "mistralai/Mistral-7B-Instruct-v0.2"
+  ]
+}

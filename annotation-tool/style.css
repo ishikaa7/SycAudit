@@ -1,0 +1,249 @@
+/* SycAudit human annotation tool. High-contrast, large type, no framework. */
+
+:root {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --ink: #14181f;
+  --muted: #5b6472;
+  --line: #d8dde5;
+  --accent: #1f5fd0;
+  --ok: #0f7a3d;
+  --err: #b3261e;
+  --done: #0f7a3d;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body { padding-bottom: 96px; }
+
+/* ---------------------------------------------------------------- topbar */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.counter { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+.progress { font-size: 14px; color: var(--muted); margin-top: 2px; }
+
+.tb-right { display: flex; align-items: center; gap: 14px; }
+
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  max-width: 460px;
+}
+
+.dot {
+  width: 22px; height: 22px;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--muted);
+  cursor: pointer;
+}
+.dot:hover { border-color: var(--accent); color: var(--accent); }
+.dot.done { background: var(--done); border-color: var(--done); color: #fff; }
+.dot.current { outline: 2px solid var(--accent); outline-offset: 1px; font-weight: 700; }
+
+.bar { height: 3px; background: #e6e9ee; }
+.bar-fill { height: 100%; width: 0; background: var(--done); transition: width 0.2s; }
+
+/* ---------------------------------------------------------------- content */
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+/* Full text, no height clamp and no inner scrollbar. Several responses run to
+   2-6k characters; clamping them to a viewport fraction silently hid the tail
+   from the annotator. The page scrolls instead. */
+.text {
+  font-size: 17px;
+  line-height: 1.68;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------- scores */
+
+.scores-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.scores-head h2 { margin: 0; font-size: 17px; }
+
+.legend { display: flex; gap: 14px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.legend b { color: var(--ink); }
+
+.hint { margin: 8px 0 16px; font-size: 13px; color: var(--muted); }
+
+.grid { display: flex; flex-direction: column; gap: 10px; }
+
+.frow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fbfcfd;
+}
+
+.flabel { flex: 1; min-width: 0; }
+.fname { font-weight: 700; margin-right: 8px; }
+.ftext { font-weight: 600; }
+.fhelp { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+
+.fsel {
+  flex: 0 0 240px;
+  padding: 11px 12px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #b9c0cb;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.fsel:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.fsel.filled { border-color: var(--accent); background: #eef4ff; font-weight: 600; }
+
+/* ---------------------------------------------------------------- actions */
+
+.actions {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.status { font-size: 14px; color: var(--muted); }
+.status.ok { color: var(--ok); font-weight: 600; }
+.status.err { color: var(--err); font-weight: 600; }
+
+.btns { display: flex; gap: 10px; }
+
+.btn {
+  padding: 11px 20px;
+  font: 600 15px/1 inherit;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #b9c0cb;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { border-color: var(--ink); }
+.btn:disabled { opacity: 0.42; cursor: not-allowed; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover:not(:disabled) { background: #1a4fae; }
+.btn.ghost { border-color: transparent; color: var(--muted); }
+
+/* ---------------------------------------------------------------- modal */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 20, 28, 0.5);
+}
+
+/* An author-level `display` beats the UA stylesheet's rule for the `hidden`
+   attribute, so .modal{display:flex} would keep the dialog permanently on
+   screen. This restores `hidden` to actually hide it. */
+.modal[hidden] { display: none; }
+
+.modal-box {
+  width: 100%;
+  max-width: 620px;
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.modal-head h2 { margin: 0; font-size: 17px; }
+.modal-head .btn { font-size: 24px; padding: 0 10px; line-height: 1; }
+
+.modal-body { padding: 20px; overflow-y: auto; font-size: 15px; }
+.modal-body dt { font-weight: 700; margin-top: 14px; }
+.modal-body dt:first-child { margin-top: 0; }
+.modal-body dd { margin: 4px 0 0; color: var(--muted); line-height: 1.55; }
+
+.scale { margin: 18px 0; padding: 14px 16px; background: #f4f6f9; border-radius: 6px; }
+.scale p { margin: 3px 0; }
+
+.warn {
+  padding: 12px 14px;
+  background: #fff8e6;
+  border-left: 3px solid #d99b0b;
+  border-radius: 4px;
+  line-height: 1.55;
+}

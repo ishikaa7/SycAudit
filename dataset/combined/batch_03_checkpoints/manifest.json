@@ -1,0 +1,105 @@
+{
+ "chunk_size": 50,
+ "chunks": [
+  {
+   "chunk": 1,
+   "file": "chunk_01.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 2,
+   "file": "chunk_02.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 3,
+   "file": "chunk_03.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 4,
+   "file": "chunk_04.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 5,
+   "file": "chunk_05.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 6,
+   "file": "chunk_06.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 7,
+   "file": "chunk_07.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 8,
+   "file": "chunk_08.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 9,
+   "file": "chunk_09.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 10,
+   "file": "chunk_10.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 11,
+   "file": "chunk_11.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 12,
+   "file": "chunk_12.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 13,
+   "file": "chunk_13.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 14,
+   "file": "chunk_14.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 15,
+   "file": "chunk_15.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 16,
+   "file": "chunk_16.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 17,
+   "file": "chunk_17.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 18,
+   "file": "chunk_18.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 19,
+   "file": "chunk_19.jsonl",
+   "n": 50
+  },
+  {
+   "chunk": 20,
+   "file": "chunk_20.jsonl",
+   "n": 50
+  }
+ ]
+}

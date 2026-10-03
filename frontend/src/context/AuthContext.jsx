@@ -12,8 +12,10 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getStoredUser);
+  // Token is React state, not a raw localStorage read, so signing out always
+  // flips isAuthenticated and forces a re-render even when user was already null.
+  const [token, setToken] = useState(getStoredToken);
 
-  const token = getStoredToken();
   const isAuthenticated = Boolean(token);
 
   const signin = useCallback(async (credentials) => {
@@ -23,6 +25,7 @@ export function AuthProvider({ children }) {
       throw new Error("Sign-in succeeded but no token was returned by the server.");
     }
     storeAuth(nextToken, nextUser);
+    setToken(nextToken);
     setUser(nextUser);
     return nextUser;
   }, []);
@@ -34,12 +37,14 @@ export function AuthProvider({ children }) {
       throw new Error("Account created but no token was returned by the server.");
     }
     storeAuth(nextToken, nextUser);
+    setToken(nextToken);
     setUser(nextUser);
     return nextUser;
   }, []);
 
   const signout = useCallback(() => {
     clearAuth();
+    setToken(null);
     setUser(null);
   }, []);
 

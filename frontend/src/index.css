@@ -5,15 +5,185 @@
 @layer base {
   html {
     @apply antialiased;
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-cream-100 text-stone-800;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-stone-900;
+  }
+
+  /* Visible focus for keyboard users on every interactive element. */
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    @apply outline-none ring-2 ring-burgundy-700 ring-offset-2 ring-offset-cream-100;
+  }
+}
+
+@layer components {
+  /* ---------- surfaces ---------- */
+  .card {
+    @apply rounded-card border border-stone-200/80 bg-white shadow-card;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:border-burgundy-200 hover:shadow-card-hover;
+  }
+
+  .panel {
+    @apply rounded-card border border-stone-200/80 bg-white shadow-panel;
+  }
+
+  /* ---------- typography ---------- */
+  .page-title {
+    @apply text-[26px] font-bold leading-tight tracking-tight text-stone-900 sm:text-[30px];
+  }
+
+  .section-title {
+    @apply text-[15px] font-semibold tracking-tight text-stone-800;
+  }
+
+  .section-sub {
+    @apply mt-1 text-[13px] leading-relaxed text-stone-500;
+  }
+
+  .eyebrow {
+    @apply text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-400;
+  }
+
+  .meta-text {
+    @apply text-xs text-stone-400;
+  }
+
+  /* ---------- controls ---------- */
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2.5
+           text-sm font-semibold transition-all duration-150 disabled:cursor-not-allowed
+           disabled:opacity-55;
+  }
+
+  .btn-primary {
+    @apply btn bg-burgundy-700 text-white shadow-sm hover:bg-burgundy-800
+           hover:shadow-card-hover active:scale-[0.985];
+  }
+
+  .btn-secondary {
+    @apply btn border border-stone-200 bg-white text-stone-700 hover:border-stone-300
+           hover:bg-cream-50 active:scale-[0.985];
+  }
+
+  .btn-ghost {
+    @apply btn text-stone-500 hover:bg-cream-200 hover:text-stone-800;
+  }
+
+  /* ---------- pills & chips ---------- */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white
+           px-2.5 py-1 text-xs font-medium text-stone-600 transition-all duration-150
+           hover:border-burgundy-200 hover:bg-burgundy-50 hover:text-burgundy-800;
+  }
+
+  .chip-static {
+    @apply inline-flex items-center gap-1.5 rounded-lg bg-cream-200 px-2.5 py-1
+           text-xs font-medium text-stone-600;
+  }
+
+  /* ---------- nav ---------- */
+  .nav-item {
+    @apply flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium
+           text-stone-600 transition-all duration-150 hover:bg-cream-200 hover:text-stone-900;
+  }
+
+  .nav-item-active {
+    @apply bg-burgundy-700 text-white shadow-sm hover:bg-burgundy-700 hover:text-white;
+  }
+
+  /* ---------- tables ---------- */
+  .table-head {
+    @apply px-3 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.1em]
+           text-stone-400;
+  }
+
+  .table-cell {
+    @apply px-3 py-2.5 text-[13px] text-stone-700;
+  }
+
+  .table-num {
+    @apply px-3 py-2.5 text-right text-[13px] tabular-nums text-stone-700;
+  }
+
+  /* ---------- score semantics ---------- */
+  .score-low {
+    @apply text-olive-700;
+  }
+
+  .score-mid {
+    @apply text-butter-800;
+  }
+
+  .score-high {
+    @apply text-burgundy-700;
+  }
+
+  .badge-low {
+    @apply bg-olive-50 text-olive-800 ring-olive-200;
+  }
+
+  .badge-mid {
+    @apply bg-butter-50 text-butter-900 ring-butter-200;
+  }
+
+  .badge-high {
+    @apply bg-burgundy-50 text-burgundy-800 ring-burgundy-200;
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Horizontal containment: never allow accidental page overflow. */
+  .no-overflow {
+    overflow-x: hidden;
+  }
+
+  .scroll-x {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Subtle scrollbar for wide tables. */
+  .scroll-x::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .scroll-x::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-stone-300;
+  }
+
+  .scroll-x::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .grid-cards {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

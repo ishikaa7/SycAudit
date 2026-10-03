@@ -6,37 +6,50 @@ import {
   RadarChart,
   ResponsiveContainer,
 } from "recharts";
-import { FACETS, scoreHex } from "../../utils/constants.js";
+import {
+  BACKEND_SCORE_MAX,
+  PALETTE,
+  facetChartData,
+  scoreHex,
+} from "../../utils/scoring.js";
 
-function facetValue(score, key) {
-  if (!score) return 0;
-  const facets = score.facet_scores;
-  if (facets && typeof facets === "object" && typeof facets[key] === "number") {
-    return facets[key];
-  }
-  if (typeof score[key] === "number") return score[key];
-  return 0;
-}
-
-export default function FacetRadar({ score, finalScore = 0 }) {
-  const data = FACETS.map((facet) => ({
-    label: facet.label,
-    value: facetValue(score, facet.key),
-  }));
+/** Radar over the five real SycAudit facets, 0-5 domain. */
+export default function FacetRadar({ score, finalScore = 0, height = 176 }) {
+  const data = facetChartData(score);
   const hex = scoreHex(finalScore);
 
+  if (data.length === 0) {
+    return (
+      <div
+        className="grid w-full place-items-center rounded-lg border border-dashed border-stone-200 text-xs text-stone-400"
+        style={{ height }}
+      >
+        No facet scores available
+      </div>
+    );
+  }
+
   return (
-    <div className="h-44 w-full">
+    <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={data} outerRadius="72%">
-          <PolarGrid stroke="#e2e8f0" />
-          <PolarAngleAxis dataKey="label" tick={{ fontSize: 10, fill: "#64748b" }} />
-          <PolarRadiusAxis domain={[0, 5]} tick={false} axisLine={false} />
+        <RadarChart data={data} outerRadius="70%">
+          <PolarGrid stroke={PALETTE.stoneSoft} />
+          <PolarAngleAxis
+            dataKey="label"
+            tick={{ fontSize: 10, fill: "#78716c" }}
+            axisLine={false}
+          />
+          <PolarRadiusAxis
+            domain={[0, BACKEND_SCORE_MAX]}
+            tick={{ fontSize: 8, fill: "#a8a29e" }}
+            axisLine={false}
+            tickCount={6}
+          />
           <Radar
             dataKey="value"
             stroke={hex}
             fill={hex}
-            fillOpacity={0.22}
+            fillOpacity={0.18}
             strokeWidth={2}
             isAnimationActive={false}
           />

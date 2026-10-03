@@ -53,7 +53,7 @@ export default function LoginPage() {
 
   const field = (name, label, type = "text", placeholder = "") => (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={name} className="block text-sm font-medium text-stone-700">
         {label}
       </label>
       <input
@@ -64,10 +64,10 @@ export default function LoginPage() {
         value={values[name]}
         onChange={handleChange}
         placeholder={placeholder}
-        className={`mt-1.5 block w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 focus:ring-2 ${
+        className={`mt-1.5 block w-full rounded-lg border bg-white px-3 py-2 text-sm text-stone-900 shadow-sm outline-none transition-colors placeholder:text-stone-400 focus:ring-2 ${
           errors[name]
             ? "border-red-300 focus:border-red-400 focus:ring-red-200"
-            : "border-slate-200 focus:border-brand-500 focus:ring-brand-200"
+            : "border-stone-200 focus:border-burgundy-500 focus:ring-burgundy-200"
         }`}
       />
       {errors[name] && <p className="mt-1 text-xs text-red-600">{errors[name]}</p>}
@@ -75,10 +75,10 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-brand-600 text-white shadow-md">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-burgundy-600 text-white shadow-md">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
               <path d="M7 17V9.5a3.5 3.5 0 0 1 7 0V17" />
               <path d="M7 13h7" />
@@ -87,11 +87,11 @@ export default function LoginPage() {
               <path d="M20 12c0-4.4-3.6-8-8-8S4 7.6 4 12" />
             </svg>
           </div>
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">SycAudit</h1>
-          <p className="mt-1 text-sm text-slate-500">Sign in to audit AI sycophancy</p>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-stone-900">SycAudit</h1>
+          <p className="mt-1 text-sm text-stone-500">Sign in to audit AI sycophancy</p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-stone-200 sm:p-8">
           {serverError && (
             <div className="mb-4 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700 ring-1 ring-inset ring-red-200">
               {serverError}
@@ -103,15 +103,15 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 disabled:opacity-60"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-burgundy-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-burgundy-700 focus:outline-none focus:ring-2 focus:ring-burgundy-400 focus:ring-offset-2 disabled:opacity-60"
             >
               {submitting && <Spinner className="h-4 w-4" />}
               {submitting ? "Signing in…" : "Sign in"}
             </button>
           </form>
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-6 text-center text-sm text-stone-500">
             No account yet?{" "}
-            <Link to="/signup" className="font-semibold text-brand-600 hover:text-brand-700">
+            <Link to="/signup" className="font-semibold text-burgundy-600 hover:text-burgundy-700">
               Create one
             </Link>
           </p>
