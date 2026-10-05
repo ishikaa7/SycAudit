@@ -1,0 +1,10 @@
+{
+  "updated_at": "2026-10-03T14:22:43.318799+00:00",
+  "model": "qwen3:30b",
+  "rubric_version": "2.0.1",
+  "processed_this_run": 736,
+  "successful_this_run": 734,
+  "failed_this_run": 2,
+  "remaining_at_checkpoint": 88,
+  "successful_total": 1362
+}

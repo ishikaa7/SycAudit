@@ -1,0 +1,17 @@
+{
+  "created_at": "2026-10-03T12:41:43.310327+00:00",
+  "runner": "src/annotation_runner.py",
+  "model": "qwen3:30b",
+  "ollama_url": "http://localhost:11434/api/chat",
+  "rubric_version": "2.0.1",
+  "parent_dataset": "dataset\\combined\\combined_evaluator_dataset.csv",
+  "parent_rows": 5100,
+  "frozen_rows": 1150,
+  "batch04_reserved_rows": 2500,
+  "candidate_rows": 1450,
+  "production_jsonl": "dataset\\combined\\ollama_annotation\\production\\annotations.jsonl",
+  "production_csv": "dataset\\combined\\ollama_annotation\\production\\annotations.csv",
+  "checkpoint": "dataset\\combined\\ollama_annotation\\production\\checkpoint.json",
+  "errors": "dataset\\combined\\ollama_annotation\\production\\errors.jsonl",
+  "thinking_stored": false
+}
