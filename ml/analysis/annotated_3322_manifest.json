@@ -1,0 +1,162 @@
+{
+  "annotation_artifacts": [
+    {
+      "batch": "human",
+      "file_sha256": "c544ed99a800fe7fd6571b2a9126ec7cb8802a4adab470e93b15283e9001bb42",
+      "format": "csv",
+      "invalid": 0,
+      "lines_loaded": 50,
+      "path": "dataset/combined/human_annotations_50.csv",
+      "recovered_from_nul_padding": [],
+      "skipped_blank_or_nonpayload": 0,
+      "valid": 50
+    },
+    {
+      "batch": "batch01",
+      "file_sha256": "19fd8a3bcfe456942aa2517a16797e365fda33ed5a5811f309b2bc80201e9147",
+      "format": "csv",
+      "invalid": 0,
+      "lines_loaded": 50,
+      "path": "dataset/combined/llm_batch_01.csv",
+      "recovered_from_nul_padding": [],
+      "skipped_blank_or_nonpayload": 0,
+      "valid": 50
+    },
+    {
+      "batch": "batch02",
+      "file_sha256": "708522a1e0232f433a379d2eb90da63d5b73c1873d4a9b0c084bf4bc1ed2b47e",
+      "format": "csv",
+      "invalid": 0,
+      "lines_loaded": 50,
+      "path": "dataset/combined/llm_batch_02.csv",
+      "recovered_from_nul_padding": [],
+      "skipped_blank_or_nonpayload": 0,
+      "valid": 50
+    },
+    {
+      "batch": "batch03",
+      "file_sha256": "16d9d4a6d6eb98d7b4d653fdd6d4446b743294086de52a9812556d643479fc84",
+      "format": "csv",
+      "invalid": 0,
+      "lines_loaded": 1000,
+      "path": "dataset/combined/llm_batch_03_1000.csv",
+      "recovered_from_nul_padding": [],
+      "skipped_blank_or_nonpayload": 0,
+      "valid": 1000
+    },
+    {
+      "batch": "production",
+      "file_sha256": "31e5640e1e465730fd42c18f93fc5ac9b10f893303c0c51587e8b61b27cf4c36",
+      "format": "jsonl",
+      "invalid": 0,
+      "lines_loaded": 1362,
+      "path": "dataset/combined/ollama_annotation/production/annotations.jsonl",
+      "recovered_from_nul_padding": [],
+      "skipped_blank_or_nonpayload": 0,
+      "valid": 1362
+    },
+    {
+      "batch": "batch04",
+      "file_sha256": "21dc30b60e785c4808decc7e6f06cab66e6d0aba1f087cf5c2e7b6b8879a259a",
+      "format": "jsonl",
+      "invalid": 0,
+      "lines_loaded": 811,
+      "path": "dataset/combined/ollama_annotation/batch_04/annotations.jsonl",
+      "recovered_from_nul_padding": [
+        82
+      ],
+      "skipped_blank_or_nonpayload": 0,
+      "valid": 811
+    }
+  ],
+  "annotation_counts_by_artifact": {
+    "batch01": 50,
+    "batch02": 50,
+    "batch03": 1000,
+    "batch04": 811,
+    "human": 50,
+    "production": 1362
+  },
+  "bge_alignment_status": true,
+  "canonicalization_statistics": {
+    "mapped": 3323,
+    "record_id_differs_from_parent_id": 500,
+    "record_id_matches_parent_id": 2823,
+    "unmapped": []
+  },
+  "canonicalization_used_parent_id_count": 1362,
+  "duplicate_statistics": {
+    "across_artifact_duplicates": 0,
+    "conflicting_duplicates": 0,
+    "within_artifact_duplicates": 0
+  },
+  "excluded_artifacts": [
+    {
+      "path": "dataset/combined/human_annotations_50.backup.csv",
+      "reason": "backup copy of the authoritative human CSV"
+    },
+    {
+      "path": "dataset/combined/batch_03_checkpoints/*.jsonl",
+      "reason": "checkpoint chunks; twin data of llm_batch_03_1000.csv"
+    },
+    {
+      "path": "dataset/combined/ollama_annotation/batch_04/annotations.csv",
+      "reason": "twin dump of batch_04/annotations.jsonl"
+    },
+    {
+      "path": "dataset/combined/ollama_annotation/batch_04/checkpoint.json",
+      "reason": "runner checkpoint, not an annotation artifact"
+    },
+    {
+      "path": "dataset/combined/ollama_annotation/batch_04/manifest.json",
+      "reason": "runner manifest, not an annotation artifact"
+    },
+    {
+      "path": "dataset/combined/batch_04_checkpoints/*.input.jsonl",
+      "reason": "input selections for batch_04, not annotations"
+    },
+    {
+      "path": "dataset/combined/validation/*",
+      "reason": "calibration / validation artifacts"
+    },
+    {
+      "path": "dataset/combined/rubric_adjudication/*",
+      "reason": "rubric experiments / adjudication, not authoritative annotations"
+    }
+  ],
+  "feature_alignment_status": true,
+  "generated_utc": "2026-10-04T11:22:42+00:00",
+  "invalid_statistics": {
+    "invalid_annotation_rows": 0,
+    "non_payload_non_json_lines": [],
+    "recovered_from_nul_padding": [
+      {
+        "batch": "batch04",
+        "line_no": 82
+      }
+    ]
+  },
+  "outputs": {
+    "annotated_3322_csv": "ml/analysis/annotated_3322.csv",
+    "annotated_3322_csv_sha256": "4eb76dc66f09021a07e85b2e3e493078052620e46007eabba8b24d41c51e76f9"
+  },
+  "parent_dataset": {
+    "path": "dataset/combined/combined_evaluator_dataset.csv",
+    "rows": 5100,
+    "sha256": "c48c87baadb545f57187b5c4e861f9f943afab8048f99f6c5df01a2ea9378d8c"
+  },
+  "repository_head": "183880c5781dd4dfe3de421d5de76607c6ac296b",
+  "repository_root_posix": ".",
+  "row_identity": {
+    "annotated_ids_mapped_to_embeddings": 3323,
+    "annotated_ids_total": 3323,
+    "canonical_id_order_digest_sha256": "6513f5e9abc472d34b3d1bbe91cf1ef4381f0c2ae00f60626732d042b15e7ed4",
+    "parent_id_set_in_embeddings": 5100
+  },
+  "rubric": {
+    "exists": true,
+    "path": "dataset/combined/SYCAUDIT_ANNOTATION_GUIDELINES_v2.0.1.md"
+  },
+  "script_version": "1.0.0",
+  "total_annotated_rows": 3323
+}

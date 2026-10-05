@@ -1,0 +1,18 @@
+{
+  "batch_size": 64,
+  "device": "cpu",
+  "dropout": 0.3,
+  "feature": "response_only",
+  "hidden_dims": [
+    1024,
+    256,
+    64
+  ],
+  "input_dim": 768,
+  "learning_rate": 0.001,
+  "max_epochs": 100,
+  "patience": 10,
+  "script_version": "0.1.0",
+  "seed": 42,
+  "weight_decay": 0.0001
+}

@@ -1,0 +1,12 @@
+# Preserve exact bytes for research data and model artifacts.
+# These files must never be altered by end-of-line normalization (core.autocrlf).
+# The annotated dataset contains mixed CRLF/LF inside quoted multi-line prompt and
+# response fields; converting them would change the stored bytes of the frozen data.
+
+# Binary artifacts
+*.npy binary
+*.pt binary
+
+# Frozen research data (store verbatim, no EOL conversion)
+ml/analysis/*.csv -text
+ml/splits/*.csv -text

@@ -1,0 +1,15 @@
+{
+  "annotated_rows": 3323,
+  "feature_dim": 3072,
+  "feature_dtype": "float32",
+  "feature_inf": 0,
+  "feature_nan": 0,
+  "feature_rows": 5100,
+  "mapped_unique": 3323,
+  "ok": true,
+  "split_rows": 3323,
+  "targets_valid": true,
+  "test_count": 489,
+  "train_count": 2345,
+  "validation_count": 489
+}

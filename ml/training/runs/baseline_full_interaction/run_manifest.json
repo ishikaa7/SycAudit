@@ -1,0 +1,48 @@
+{
+  "alignment": {
+    "annotated_rows": 3323,
+    "feature_dim": 3072,
+    "feature_dtype": "float32",
+    "feature_inf": 0,
+    "feature_nan": 0,
+    "feature_rows": 5100,
+    "mapped_unique": 3323,
+    "ok": true,
+    "split_rows": 3323,
+    "targets_valid": true,
+    "test_count": 489,
+    "train_count": 2345,
+    "validation_count": 489
+  },
+  "all_grads_finite": true,
+  "checkpoint_roundtrip_ok": true,
+  "created_utc": "2026-10-04T15:43:50.007137+00:00",
+  "determinism": {
+    "deterministic_algorithms": "strict deterministic algorithms enabled (CPU)."
+  },
+  "device": "cpu",
+  "device_checks": {
+    "all_on_selected_device": true,
+    "feature_batch_device": "cpu",
+    "forward_logits_device": "cpu",
+    "gradient_device": "cpu",
+    "model_param_device": "cpu",
+    "target_batch_device": "cpu"
+  },
+  "evaluated_on": "validation",
+  "feature": "full_interaction",
+  "input_dim": 3072,
+  "mode": "train",
+  "outputs": [
+    "config.json",
+    "training_history.json",
+    "best_model.pt",
+    "validation_metrics.json",
+    "run_manifest.json",
+    "alignment_record.json"
+  ],
+  "parameter_count": 3426575,
+  "repository_head": "183880c5781dd4dfe3de421d5de76607c6ac296b",
+  "script_version": "0.1.0",
+  "test_split_not_used": true
+}
