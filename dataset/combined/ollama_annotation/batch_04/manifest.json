@@ -2,9 +2,9 @@
   "dataset": "SycAudit Batch 04",
   "selection_file": "dataset\\combined\\batch_04_checkpoints\\batch_04_selection.csv",
   "expected_records": 2500,
-  "model": "qwen3:30b",
+  "model": "qwen3:32b",
   "ollama_url": "http://localhost:11434/api/chat",
-  "started_at": "2026-10-03T12:38:35.023326+00:00",
+  "started_at": "2026-10-06T07:09:02.367036+00:00",
   "timeout": 180,
   "retries": 2
 }

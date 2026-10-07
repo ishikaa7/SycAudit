@@ -16,7 +16,7 @@ import requests
 # ============================================================
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "qwen3:30b"
+MODEL = "qwen3:32b"
 
 BATCH04_SELECTION = Path(
     "dataset/combined/batch_04_checkpoints/batch_04_selection.csv"
