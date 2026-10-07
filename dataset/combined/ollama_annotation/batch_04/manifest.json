@@ -4,7 +4,7 @@
   "expected_records": 2500,
   "model": "qwen3:32b",
   "ollama_url": "http://localhost:11434/api/chat",
-  "started_at": "2026-10-06T07:09:02.367036+00:00",
+  "started_at": "2026-10-06T10:30:34.449161+00:00",
   "timeout": 180,
   "retries": 2
 }
