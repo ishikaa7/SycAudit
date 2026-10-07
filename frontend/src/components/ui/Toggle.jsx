@@ -21,8 +21,8 @@ export default function Toggle({ checked, onChange, disabled = false, label }) {
       aria-label={label}
       onClick={handleToggle}
       disabled={disabled || pending}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-burgundy-400 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 ${
-        checked ? "bg-burgundy-600" : "bg-stone-300"
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 ${
+        checked ? "bg-indigo-600" : "bg-slate-300"
       }`}
     >
       <span

@@ -6,54 +6,117 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* Primary: deep burgundy / wine. Primary actions, active nav, high scores. */
-        burgundy: {
-          50: "#faf3f5",
-          100: "#f2e2e7",
-          200: "#e4c3cc",
-          300: "#d09aa8",
-          400: "#b56c80",
-          500: "#9c4a63",
-          600: "#843553",
-          700: "#6f1d3a",
-          800: "#5c1830",
-          900: "#4d1528",
-          950: "#2c0a16",
+        /*
+         * Design tokens for the AI-evaluation palette.
+         * Indigo is the brand/primary colour, violet the single accent, emerald /
+         * amber / red are reserved for evaluation status, and slate / surface
+         * carry all neutrals. Status colours are semantic only — never decoration.
+         */
+        /* Primary: deep indigo. Primary actions, active nav, focus rings. */
+        indigo: {
+          50: "#eef2ff",
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1",
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81",
+          950: "#1e1b4b",
         },
-        /* Secondary: muted olive. Low sycophancy, success, healthy behaviour. */
-        olive: {
-          50: "#f7f9f1",
-          100: "#edf1dd",
-          200: "#dbe3bd",
-          300: "#c3d096",
-          400: "#8b9c52",
-          500: "#667a3a",
-          600: "#55662f",
-          700: "#465425",
-          800: "#3a451f",
-          900: "#323b1d",
-          950: "#1b2010",
+        /* Secondary accent: soft violet. Used sparingly. */
+        violet: {
+          50: "#f5f3ff",
+          100: "#ede9fe",
+          200: "#ddd6fe",
+          300: "#c4b5fd",
+          400: "#a78bfa",
+          500: "#8b5cf6",
+          600: "#7c3aed",
+          700: "#6d28d9",
+          800: "#5b21b6",
+          900: "#4c1d95",
         },
-        /* Accent: muted butter yellow. Used sparingly - warnings and medium band only. */
-        butter: {
-          50: "#fdfaef",
-          100: "#faf3d8",
-          200: "#f5ebbd",
-          300: "#efe09b",
-          400: "#e8d98a",
-          500: "#dcc46b",
-          600: "#c9a74c",
-          700: "#a9853a",
-          800: "#8a6a33",
-          900: "#72582e",
+        /* Success / low sycophancy. */
+        emerald: {
+          50: "#ecfdf5",
+          100: "#d1fae5",
+          200: "#a7f3d0",
+          300: "#6ee7b7",
+          400: "#34d399",
+          500: "#10b981",
+          600: "#059669",
+          700: "#047857",
+          800: "#065f46",
+          900: "#064e3b",
+          950: "#022c22",
         },
-        /* Warm off-white / cream surfaces. */
-        cream: {
-          50: "#fdfcfa",
-          100: "#faf8f4",
-          200: "#f3efe8",
-          300: "#e8e2d7",
-          400: "#d8d0c1",
+        /* Warning / medium band. */
+        amber: {
+          50: "#fffbeb",
+          100: "#fef3c7",
+          200: "#fde68a",
+          300: "#fcd34d",
+          400: "#fbbf24",
+          500: "#f59e0b",
+          600: "#d97706",
+          700: "#b45309",
+          800: "#92400e",
+          900: "#78350f",
+          950: "#451a03",
+        },
+        /* Danger / high band, failures and timeouts. */
+        red: {
+          50: "#fef2f2",
+          100: "#fee2e2",
+          200: "#fecaca",
+          300: "#fca5a5",
+          400: "#f87171",
+          500: "#ef4444",
+          600: "#dc2626",
+          700: "#b91c1c",
+          800: "#991b1b",
+          900: "#7f1d1d",
+          950: "#450a0a",
+        },
+        /*
+         * Neutrals: cool slate ramp.
+         * 900 primary text, 700 secondary-strong, 500 secondary, 400 muted,
+         * 300 secondary-button border, 200 border, 50 page background.
+         */
+        slate: {
+          50: "#f8fafc",
+          100: "#f1f5f9",
+          200: "#e2e8f0",
+          300: "#cbd5e1",
+          400: "#94a3b8",
+          500: "#64748b",
+          600: "#475569",
+          700: "#334155",
+          800: "#1f2937",
+          900: "#111827",
+          950: "#0b1220",
+        },
+        /*
+         * Surface family, mapped to the product palette:
+         *   50  page background      #F8FAFC
+         *   100 card / surface       #FFFFFF
+         *   200 border               #E2E8F0
+         *   300 border (segment fill)#E2E8F0
+         *   500 secondary text       #64748B
+         *   900 primary text         #111827
+         * Valid utilities: bg-surface-50/100, border-surface-200,
+         * text-surface-500/900, ring-offset-surface-50.
+         */
+        surface: {
+          50: "#f8fafc",
+          100: "#ffffff",
+          200: "#e2e8f0",
+          300: "#e2e8f0",
+          500: "#64748b",
+          900: "#111827",
         },
       },
       fontFamily: {
@@ -74,10 +137,11 @@ export default {
         card: "14px",
       },
       boxShadow: {
-        card: "0 1px 2px 0 rgb(45 33 30 / 0.04), 0 1px 3px 0 rgb(45 33 30 / 0.03)",
+        /* Very subtle, cool-tinted elevation. */
+        card: "0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.03)",
         "card-hover":
-          "0 2px 4px -1px rgb(45 33 30 / 0.05), 0 8px 20px -6px rgb(45 33 30 / 0.09)",
-        panel: "0 1px 3px 0 rgb(45 33 30 / 0.05), 0 12px 32px -12px rgb(45 33 30 / 0.10)",
+          "0 2px 4px -1px rgb(15 23 42 / 0.05), 0 8px 20px -6px rgb(15 23 42 / 0.08)",
+        panel: "0 1px 3px 0 rgb(15 23 42 / 0.04), 0 12px 32px -12px rgb(15 23 42 / 0.10)",
       },
       keyframes: {
         "fade-up": {

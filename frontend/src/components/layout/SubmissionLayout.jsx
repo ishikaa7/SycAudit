@@ -17,8 +17,8 @@ export default function SubmissionLayout() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center gap-2.5 text-sm text-stone-400">
-        <Spinner className="h-4 w-4 text-burgundy-700" />
+      <div className="flex min-h-[50vh] items-center justify-center gap-2.5 text-sm text-slate-400">
+        <Spinner className="h-4 w-4 text-indigo-700" />
         Loading submission…
       </div>
     );

@@ -3,6 +3,7 @@ import { getModels, setModelActive } from "../api/models.js";
 import { errorMessage } from "../api/client.js";
 import { formatDateTime } from "../utils/format.js";
 import { scoreHex, scoreText } from "../utils/constants.js";
+import { PALETTE } from "../utils/scoring.js";
 import Toggle from "../components/ui/Toggle.jsx";
 import Spinner from "../components/ui/Spinner.jsx";
 
@@ -69,7 +70,7 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-stone-400">
+      <div className="flex items-center justify-center py-24 text-slate-400">
         <Spinner className="h-8 w-8" />
       </div>
     );
@@ -78,10 +79,10 @@ export default function AdminPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-xl font-semibold tracking-tight text-stone-900">
+        <h1 className="text-xl font-semibold tracking-tight text-slate-900">
           Model health
         </h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-slate-500">
           Toggle responder models on or off. Average sycophancy is computed across
           all scored responses for each model.
         </p>
@@ -94,17 +95,17 @@ export default function AdminPage() {
       )}
 
       {models.length === 0 ? (
-        <div className="rounded-xl bg-white px-6 py-12 text-center shadow-sm ring-1 ring-stone-200">
-          <p className="text-sm font-medium text-stone-700">No models configured</p>
-          <p className="mt-1 text-sm text-stone-400">
+        <div className="rounded-xl bg-white px-6 py-12 text-center shadow-sm ring-1 ring-slate-200">
+          <p className="text-sm font-medium text-slate-700">No models configured</p>
+          <p className="mt-1 text-sm text-slate-400">
             Models appear here once the backend exposes the model registry.
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-stone-200">
+        <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
-              <tr className="border-b border-stone-100 text-xs uppercase tracking-wide text-stone-400">
+              <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400">
                 <th className="px-4 py-3 font-semibold">Model</th>
                 <th className="px-4 py-3 font-semibold">Provider</th>
                 <th className="px-4 py-3 font-semibold">Active</th>
@@ -119,18 +120,18 @@ export default function AdminPage() {
                 return (
                   <tr
                     key={model.model_id}
-                    className="border-b border-stone-50 last:border-0"
+                    className="border-b border-slate-50 last:border-0"
                   >
-                    <td className="px-4 py-3.5 font-medium text-stone-800">
+                    <td className="px-4 py-3.5 font-medium text-slate-800">
                       {model.model_name ?? model.name ?? "—"}
                       {model.version ? (
-                        <span className="ml-1.5 text-xs font-normal text-stone-400">
+                        <span className="ml-1.5 text-xs font-normal text-slate-400">
                           {model.version}
                         </span>
                       ) : null}
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center rounded-md bg-stone-100 px-2 py-0.5 text-xs font-medium capitalize text-stone-600">
+                      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium capitalize text-slate-600">
                         {model.provider ?? "—"}
                       </span>
                     </td>
@@ -143,31 +144,31 @@ export default function AdminPage() {
                           label={`${model.model_name ?? "model"} active`}
                         />
                         {togglingId === model.model_id && (
-                          <Spinner className="h-3.5 w-3.5 text-burgundy-600" />
+                          <Spinner className="h-3.5 w-3.5 text-indigo-600" />
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="h-2 w-24 overflow-hidden rounded-full bg-stone-100">
+                        <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{
                               width: `${pct}%`,
-                              backgroundColor: avg === null ? "#cbd5e1" : scoreHex(avg ?? 0),
+                              backgroundColor: avg === null ? PALETTE.grid : scoreHex(avg ?? 0),
                             }}
                           />
                         </div>
                         <span
                           className={`w-10 text-right text-xs font-semibold tabular-nums ${
-                            avg === null ? "text-stone-400" : scoreText(avg ?? 0)
+                            avg === null ? "text-slate-400" : scoreText(avg ?? 0)
                           }`}
                         >
                           {avg === null ? "—" : avg.toFixed(1)}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5 text-xs text-stone-500">
+                    <td className="px-4 py-3.5 text-xs text-slate-500">
                       {formatDateTime(getLastUsed(model))}
                     </td>
                   </tr>

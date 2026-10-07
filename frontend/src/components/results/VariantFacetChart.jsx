@@ -24,9 +24,9 @@ function FacetTooltip({ active, payload }) {
   const p = payload[0];
   const row = p?.payload;
   return (
-    <div className="rounded-xl border border-stone-200 bg-white px-3 py-2 shadow-panel">
-      <p className="text-[12px] font-semibold text-stone-800">{row?.name}</p>
-      <p className="mt-0.5 text-[11.5px] text-stone-500">
+    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-panel">
+      <p className="text-[12px] font-semibold text-slate-800">{row?.name}</p>
+      <p className="mt-0.5 text-[11.5px] text-slate-500">
         {row?.id} · {row?.value} / {BACKEND_SCORE_MAX}
       </p>
     </div>
@@ -73,10 +73,10 @@ export default function VariantFacetChart({ row, variantDef, height = 168 }) {
     : [];
 
   return (
-    <div className="rounded-card border border-stone-200 bg-white p-4 shadow-card">
+    <div className="rounded-card border border-slate-200 bg-white p-4 shadow-card">
       <header className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[13.5px] font-semibold text-stone-900">
+          <p className="text-[13.5px] font-semibold text-slate-900">
             {variantDef.label} — {variantDef.sublabel}
           </p>
           <p className="meta-text truncate">{row?.modelName ?? "No model"}</p>
@@ -86,8 +86,8 @@ export default function VariantFacetChart({ row, variantDef, height = 168 }) {
             className="shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums"
             style={{
               backgroundColor:
-                row.finalScore != null ? `${scoreHex(row.finalScore)}18` : PALETTE.cream,
-              color: row.finalScore != null ? scoreHex(row.finalScore) : "#a8a29e",
+                row.finalScore != null ? `${scoreHex(row.finalScore)}18` : PALETTE.surface,
+              color: row.finalScore != null ? scoreHex(row.finalScore) : PALETTE.axisMuted,
             }}
           >
             {row.finalScore != null ? `${row.finalScore.toFixed(2)} / 5` : "N/A"}
@@ -97,12 +97,12 @@ export default function VariantFacetChart({ row, variantDef, height = 168 }) {
 
       {!hasData ? (
         <div
-          className="grid place-items-center rounded-xl border border-dashed border-stone-200 text-center"
+          className="grid place-items-center rounded-xl border border-dashed border-slate-200 text-center"
           style={{ height }}
         >
           <div className="px-3">
-            <p className="text-[12.5px] font-semibold text-stone-600">{emptyTitle}</p>
-            <p className="mt-1 text-[11.5px] leading-relaxed text-stone-400">{emptyBody}</p>
+            <p className="text-[12.5px] font-semibold text-slate-600">{emptyTitle}</p>
+            <p className="mt-1 text-[11.5px] leading-relaxed text-slate-400">{emptyBody}</p>
           </div>
         </div>
       ) : (
@@ -110,29 +110,29 @@ export default function VariantFacetChart({ row, variantDef, height = 168 }) {
           <div style={{ height }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 16, right: 4, bottom: 0, left: -22 }}>
-                <CartesianGrid strokeDasharray="2 4" stroke={PALETTE.stoneSoft} vertical={false} />
+                <CartesianGrid strokeDasharray="2 4" stroke={PALETTE.grid} vertical={false} />
                 <XAxis
                   dataKey="id"
-                  tick={{ fontSize: 10.5, fill: "#78716c", fontWeight: 600 }}
-                  axisLine={{ stroke: PALETTE.stoneSoft }}
+                  tick={{ fontSize: 10.5, fill: PALETTE.axisStrong, fontWeight: 600 }}
+                  axisLine={{ stroke: PALETTE.grid }}
                   tickLine={false}
                 />
                 <YAxis
                   domain={[0, BACKEND_SCORE_MAX]}
-                  tick={{ fontSize: 9.5, fill: "#a8a29e" }}
+                  tick={{ fontSize: 9.5, fill: PALETTE.axisMuted }}
                   axisLine={false}
                   tickLine={false}
                   width={38}
                 />
-                <Tooltip content={<FacetTooltip />} cursor={{ fill: "#faf8f4" }} />
+                <Tooltip content={<FacetTooltip />} cursor={{ fill: PALETTE.surface }} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} isAnimationActive={false}>
                   {data.map((d) => (
-                    <Cell key={d.id} fill={d.present ? scoreHex(d.value) : "#e7e5e4"} />
+                    <Cell key={d.id} fill={d.present ? scoreHex(d.value) : PALETTE.grid} />
                   ))}
                   <LabelList
                     dataKey="label"
                     position="top"
-                    style={{ fontSize: 9.5, fill: "#78716c", fontWeight: 600 }}
+                    style={{ fontSize: 9.5, fill: PALETTE.axisStrong, fontWeight: 600 }}
                   />
                 </Bar>
               </BarChart>
@@ -140,15 +140,15 @@ export default function VariantFacetChart({ row, variantDef, height = 168 }) {
           </div>
 
           {/* Accessible + explicit facet legend, since bars alone can mislead. */}
-          <dl className="mt-2 grid grid-cols-5 gap-1 border-t border-stone-100 pt-2.5">
+          <dl className="mt-2 grid grid-cols-5 gap-1 border-t border-slate-100 pt-2.5">
             {data.map((d) => (
               <div key={d.id} className="min-w-0 text-center">
-                <dt className="truncate text-[9.5px] font-medium text-stone-400" title={d.name}>
+                <dt className="truncate text-[9.5px] font-medium text-slate-400" title={d.name}>
                   {d.name}
                 </dt>
                 <dd
                   className="mt-0.5 text-[11px] font-bold tabular-nums"
-                  style={{ color: d.present ? scoreHex(d.value) : "#a8a29e" }}
+                  style={{ color: d.present ? scoreHex(d.value) : PALETTE.axisMuted }}
                 >
                   {d.present ? facetFillPct(d.value).toFixed(0) + "%" : "N/A"}
                 </dd>

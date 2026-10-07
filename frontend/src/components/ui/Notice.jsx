@@ -1,9 +1,9 @@
 /** Small explanatory notice for genuine API limitations. */
 export default function Notice({ tone = "info", title, children, className = "" }) {
   const tones = {
-    info: "border-stone-200 bg-cream-50 text-stone-600",
-    warning: "border-butter-200 bg-butter-50 text-butter-900",
-    danger: "border-burgundy-200 bg-burgundy-50 text-burgundy-900",
+    info: "border-slate-200 bg-surface-50 text-slate-600",
+    warning: "border-amber-200 bg-amber-50 text-amber-900",
+    danger: "border-red-200 bg-red-50 text-red-800",
   };
   return (
     <div className={`flex gap-2.5 rounded-xl border px-3.5 py-3 ${tones[tone]} ${className}`}>

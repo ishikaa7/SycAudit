@@ -21,7 +21,7 @@ export default function FacetRadar({ score, finalScore = 0, height = 176 }) {
   if (data.length === 0) {
     return (
       <div
-        className="grid w-full place-items-center rounded-lg border border-dashed border-stone-200 text-xs text-stone-400"
+        className="grid w-full place-items-center rounded-lg border border-dashed border-slate-200 text-xs text-slate-400"
         style={{ height }}
       >
         No facet scores available
@@ -33,15 +33,15 @@ export default function FacetRadar({ score, finalScore = 0, height = 176 }) {
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} outerRadius="70%">
-          <PolarGrid stroke={PALETTE.stoneSoft} />
+          <PolarGrid stroke={PALETTE.grid} />
           <PolarAngleAxis
             dataKey="label"
-            tick={{ fontSize: 10, fill: "#78716c" }}
+            tick={{ fontSize: 10, fill: PALETTE.axisStrong }}
             axisLine={false}
           />
           <PolarRadiusAxis
             domain={[0, BACKEND_SCORE_MAX]}
-            tick={{ fontSize: 8, fill: "#a8a29e" }}
+            tick={{ fontSize: 8, fill: PALETTE.axisMuted }}
             axisLine={false}
             tickCount={6}
           />

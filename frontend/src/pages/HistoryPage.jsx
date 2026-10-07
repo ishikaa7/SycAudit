@@ -3,20 +3,26 @@ import useSubmissionList from "../hooks/useSubmissionList.js";
 import PageHeader from "../components/ui/PageHeader.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import Notice from "../components/ui/Notice.jsx";
-import StatusBadge from "../components/ui/StatusBadge.jsx";
 import Spinner from "../components/ui/Spinner.jsx";
-import { formatDateTime, timeAgo, truncate } from "../utils/format.js";
+import { formatDateTime, truncate } from "../utils/format.js";
+import { completedSubmissionsNewestFirst, submissionRoute } from "../utils/activeSubmission.js";
 
-/** Chronological run history, including pending and failed runs. */
+/**
+ * HISTORY — the one place in the application that lists previous analyses.
+ * This page remains the entry point for selecting an existing audit.
+ */
 export default function HistoryPage() {
   const { items, loading, error, refresh } = useSubmissionList();
+
+  const completed = completedSubmissionsNewestFirst(items);
+  const unfinished = items.length - completed.length;
 
   return (
     <div className="animate-fade-up">
       <PageHeader
         eyebrow="History"
-        title="Run history"
-        subtitle="All runs in chronological order, including any that are still processing or failed."
+        title="History"
+        subtitle="Every completed analysis, newest first. Select one to open the mentor demo analysis."
       />
 
       {error && (
@@ -33,70 +39,55 @@ export default function HistoryPage() {
       )}
 
       {loading ? (
-        <div className="flex min-h-[40vh] items-center justify-center gap-2.5 text-sm text-stone-400">
-          <Spinner className="h-4 w-4 text-burgundy-700" />
+        <div className="flex min-h-[40vh] items-center justify-center gap-2.5 text-sm text-slate-400">
+          <Spinner className="h-4 w-4 text-indigo-700" />
           Loading history…
         </div>
-      ) : items.length === 0 ? (
+      ) : completed.length === 0 ? (
         <EmptyState
           icon="clock"
-          title="No history yet"
-          subtitle="Runs you start will be listed here with their status and timestamps."
+          title="No completed analysis yet"
+          subtitle="Run a new analysis to see detailed sycophancy evaluation."
           action={
             <Link to="/dashboard" className="btn-primary">
-              Run an analysis
+              New Analysis
             </Link>
           }
         />
       ) : (
-        <div className="card overflow-hidden">
-          <div className="scroll-x">
-            <table className="w-full min-w-[640px] border-collapse">
-              <thead className="border-b border-stone-100 bg-cream-50">
-                <tr>
-                  <th className="table-head">Prompt</th>
-                  <th className="table-head">Status</th>
-                  <th className="table-head">Created</th>
-                  <th className="table-head text-right">Last updated</th>
-                  <th className="table-head" />
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((s) => {
-                  const id = s.submission_id ?? s.id;
-                  return (
-                    <tr key={id} className="border-b border-stone-100 last:border-0 hover:bg-cream-50">
-                      <td className="table-cell">
-                        <Link
-                          to={`/submissions/${id}`}
-                          className="block max-w-[320px] truncate font-medium text-stone-800 hover:text-burgundy-800"
-                          title={s.original_prompt}
-                        >
-                          {truncate(s.original_prompt, 70)}
-                        </Link>
-                      </td>
-                      <td className="table-cell">
-                        <StatusBadge status={s.status} />
-                      </td>
-                      <td className="table-cell text-stone-500">{formatDateTime(s.created_at)}</td>
-                      <td className="table-cell text-right text-stone-500">
-                        {timeAgo(s.updated_at ?? s.created_at)}
-                      </td>
-                      <td className="table-cell text-right">
-                        <Link
-                          to={`/submissions/${id}`}
-                          className="text-[11.5px] font-medium text-burgundy-700 hover:text-burgundy-800"
-                        >
-                          View →
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <>
+          {unfinished > 0 && (
+            <div className="mb-4">
+              <Notice tone="info" title="Runs still in progress or failed are not listed here">
+                {unfinished} run{unfinished === 1 ? " is" : "s are"} pending, processing or failed,
+                so {unfinished === 1 ? "it has" : "they have"} no results to open yet.
+              </Notice>
+            </div>
+          )}
+
+          <div className="grid gap-3">
+            {completed.map((s) => {
+              const id = s.submission_id;
+              return (
+                <Link
+                  key={id}
+                  to={submissionRoute(id, "prototype-analysis")}
+                  className="card card-hover flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-medium leading-relaxed text-slate-800" title={s.original_prompt}>
+                      {truncate(s.original_prompt, 140)}
+                    </p>
+                    <p className="meta-text mt-1.5">Created {formatDateTime(s.created_at)}</p>
+                  </div>
+                  <span className="shrink-0 text-[12px] font-semibold text-indigo-700">
+                    Open SycAudit Analysis →
+                  </span>
+                </Link>
+              );
+            })}
           </div>
-        </div>
+        </>
       )}
     </div>
   );

@@ -9,55 +9,55 @@
   }
 
   body {
-    @apply bg-cream-100 text-stone-800;
+    @apply bg-surface-50 text-slate-800;
   }
 
   h1,
   h2,
   h3,
   h4 {
-    @apply text-stone-900;
+    @apply text-slate-900;
   }
 
   /* Visible focus for keyboard users on every interactive element. */
   :where(a, button, input, textarea, select, [tabindex]):focus-visible {
-    @apply outline-none ring-2 ring-burgundy-700 ring-offset-2 ring-offset-cream-100;
+    @apply outline-none ring-2 ring-indigo-600 ring-offset-2 ring-offset-surface-50;
   }
 }
 
 @layer components {
   /* ---------- surfaces ---------- */
   .card {
-    @apply rounded-card border border-stone-200/80 bg-white shadow-card;
+    @apply rounded-card border border-slate-200/80 bg-white shadow-card;
   }
 
   .card-hover {
-    @apply transition-all duration-200 hover:border-burgundy-200 hover:shadow-card-hover;
+    @apply transition-all duration-200 hover:border-indigo-200 hover:shadow-card-hover;
   }
 
   .panel {
-    @apply rounded-card border border-stone-200/80 bg-white shadow-panel;
+    @apply rounded-card border border-slate-200/80 bg-white shadow-panel;
   }
 
   /* ---------- typography ---------- */
   .page-title {
-    @apply text-[26px] font-bold leading-tight tracking-tight text-stone-900 sm:text-[30px];
+    @apply text-[26px] font-bold leading-tight tracking-tight text-slate-900 sm:text-[30px];
   }
 
   .section-title {
-    @apply text-[15px] font-semibold tracking-tight text-stone-800;
+    @apply text-[15px] font-semibold tracking-tight text-slate-800;
   }
 
   .section-sub {
-    @apply mt-1 text-[13px] leading-relaxed text-stone-500;
+    @apply mt-1 text-[13px] leading-relaxed text-slate-500;
   }
 
   .eyebrow {
-    @apply text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-400;
+    @apply text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-400;
   }
 
   .meta-text {
-    @apply text-xs text-stone-400;
+    @apply text-xs text-slate-400;
   }
 
   /* ---------- controls ---------- */
@@ -68,78 +68,80 @@
   }
 
   .btn-primary {
-    @apply btn bg-burgundy-700 text-white shadow-sm hover:bg-burgundy-800
+    @apply btn bg-indigo-600 text-white shadow-sm hover:bg-indigo-700
            hover:shadow-card-hover active:scale-[0.985];
   }
 
   .btn-secondary {
-    @apply btn border border-stone-200 bg-white text-stone-700 hover:border-stone-300
-           hover:bg-cream-50 active:scale-[0.985];
+    @apply btn border border-slate-300 bg-white text-slate-700 hover:border-slate-300
+           hover:bg-indigo-50 active:scale-[0.985];
   }
 
   .btn-ghost {
-    @apply btn text-stone-500 hover:bg-cream-200 hover:text-stone-800;
+    @apply btn text-slate-500 hover:bg-surface-200 hover:text-slate-800;
   }
 
   /* ---------- pills & chips ---------- */
   .pill {
-    @apply inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white
-           px-2.5 py-1 text-xs font-medium text-stone-600 transition-all duration-150
-           hover:border-burgundy-200 hover:bg-burgundy-50 hover:text-burgundy-800;
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white
+           px-2.5 py-1 text-xs font-medium text-slate-600 transition-all duration-150
+           hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-800;
   }
 
   .chip-static {
-    @apply inline-flex items-center gap-1.5 rounded-lg bg-cream-200 px-2.5 py-1
-           text-xs font-medium text-stone-600;
+    @apply inline-flex items-center gap-1.5 rounded-lg bg-surface-200 px-2.5 py-1
+           text-xs font-medium text-slate-600;
   }
 
   /* ---------- nav ---------- */
   .nav-item {
     @apply flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium
-           text-stone-600 transition-all duration-150 hover:bg-cream-200 hover:text-stone-900;
+           text-slate-600 transition-all duration-150 hover:bg-surface-200 hover:text-slate-900;
   }
 
   .nav-item-active {
-    @apply bg-burgundy-700 text-white shadow-sm hover:bg-burgundy-700 hover:text-white;
+    @apply bg-indigo-600 text-white shadow-sm hover:bg-indigo-600 hover:text-white;
   }
 
   /* ---------- tables ---------- */
   .table-head {
     @apply px-3 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.1em]
-           text-stone-400;
+           text-slate-400;
   }
 
   .table-cell {
-    @apply px-3 py-2.5 text-[13px] text-stone-700;
+    @apply px-3 py-2.5 text-[13px] text-slate-700;
   }
 
   .table-num {
-    @apply px-3 py-2.5 text-right text-[13px] tabular-nums text-stone-700;
+    @apply px-3 py-2.5 text-right text-[13px] tabular-nums text-slate-700;
   }
 
   /* ---------- score semantics ---------- */
+  /* Text tints are darkened for contrast; charts and badges use the pure
+     emerald / amber / red status colours. */
   .score-low {
-    @apply text-olive-700;
+    @apply text-emerald-700;
   }
 
   .score-mid {
-    @apply text-butter-800;
+    @apply text-amber-700;
   }
 
   .score-high {
-    @apply text-burgundy-700;
+    @apply text-red-600;
   }
 
   .badge-low {
-    @apply bg-olive-50 text-olive-800 ring-olive-200;
+    @apply bg-emerald-50 text-emerald-800 ring-emerald-200;
   }
 
   .badge-mid {
-    @apply bg-butter-50 text-butter-900 ring-butter-200;
+    @apply bg-amber-50 text-amber-900 ring-amber-200;
   }
 
   .badge-high {
-    @apply bg-burgundy-50 text-burgundy-800 ring-burgundy-200;
+    @apply bg-red-50 text-red-700 ring-red-200;
   }
 }
 
@@ -164,7 +166,7 @@
   }
 
   .scroll-x::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-stone-300;
+    @apply rounded-full bg-slate-300;
   }
 
   .scroll-x::-webkit-scrollbar-track {

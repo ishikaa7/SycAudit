@@ -13,9 +13,9 @@ function polar(cx, cy, r, angleDeg) {
  * thresholds in utils/scoring.js.
  */
 const WOBBLE_BANDS = [
-  { max: 0.33, hex: PALETTE.olive, label: "Stable" },
-  { max: 0.66, hex: PALETTE.butterDeep, label: "Moderately stable" },
-  { max: 1.01, hex: PALETTE.burgundy, label: "Unstable" },
+  { max: 0.33, hex: PALETTE.success, label: "Stable" },
+  { max: 0.66, hex: PALETTE.warning, label: "Moderately stable" },
+  { max: 1.01, hex: PALETTE.danger, label: "Unstable" },
 ];
 
 function wobbleBand(value) {
@@ -56,7 +56,7 @@ export default function WobbleGauge({ value = 0, size = 220 }) {
         role="img"
         aria-label={`Wobble score ${formatPercent(clamped)} — ${bandLabel}`}
       >
-        <path d={track} stroke={PALETTE.stoneSoft} strokeWidth={stroke} strokeLinecap="round" fill="none" />
+        <path d={track} stroke={PALETTE.grid} strokeWidth={stroke} strokeLinecap="round" fill="none" />
         {arc && (
           <path
             d={arc}
@@ -76,7 +76,7 @@ export default function WobbleGauge({ value = 0, size = 220 }) {
               y={p.y}
               textAnchor={tick.at === 0 ? "start" : tick.at === 1 ? "end" : "middle"}
               fontSize="9"
-              fill="#a8a29e"
+              fill={PALETTE.axisMuted}
             >
               {tick.label}
             </text>
@@ -86,7 +86,7 @@ export default function WobbleGauge({ value = 0, size = 220 }) {
           {formatPercent(clamped)}
         </text>
       </svg>
-      <p className="mt-1 text-xs font-medium text-stone-400">
+      <p className="mt-1 text-xs font-medium text-slate-400">
         Wobble score · {STABILITY_META[bandLabel.toLowerCase().includes("moder") ? "moderate" : clamped < 0.33 ? "low" : "high"]?.label ?? bandLabel}
       </p>
     </div>

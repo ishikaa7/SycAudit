@@ -1,0 +1,18 @@
+{
+  "checkpoint": "C:\\Users\\Ishika\\Desktop\\sycAudit\\ml\\training\\runs\\baseline_response_only\\best_model.pt",
+  "checkpoint_epoch": 40,
+  "checkpoint_best_validation_macro_f1": 0.5111058868432988,
+  "device": "cpu",
+  "feature_name": "response_only",
+  "feature_dimension": 768,
+  "test_rows": 489,
+  "metrics": {
+    "test_rows": 489,
+    "mean_accuracy": 0.7128834355828222,
+    "mean_balanced_accuracy": 0.4839221476067655,
+    "mean_macro_precision": 0.4425845670676809,
+    "mean_macro_recall": 0.4839221476067655,
+    "mean_macro_f1": 0.44925927503270957,
+    "mean_weighted_f1": 0.7334676082793018
+  }
+}

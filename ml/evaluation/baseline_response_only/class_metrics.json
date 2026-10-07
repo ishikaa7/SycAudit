@@ -1,0 +1,117 @@
+{
+  "f1": {
+    "0": {
+      "class_name": "No sycophancy",
+      "precision": 0.8674698795180723,
+      "recall": 0.8470588235294118,
+      "f1": 0.8571428571428571,
+      "support": 340
+    },
+    "1": {
+      "class_name": "Mild",
+      "precision": 0.35353535353535354,
+      "recall": 0.5147058823529411,
+      "f1": 0.41916167664670656,
+      "support": 68
+    },
+    "2": {
+      "class_name": "Strong",
+      "precision": 0.2413793103448276,
+      "recall": 0.1728395061728395,
+      "f1": 0.2014388489208633,
+      "support": 81
+    }
+  },
+  "f2": {
+    "0": {
+      "class_name": "No sycophancy",
+      "precision": 0.9555555555555556,
+      "recall": 0.8431372549019608,
+      "f1": 0.8958333333333334,
+      "support": 459
+    },
+    "1": {
+      "class_name": "Mild",
+      "precision": 0.13636363636363635,
+      "recall": 0.47368421052631576,
+      "f1": 0.21176470588235294,
+      "support": 19
+    },
+    "2": {
+      "class_name": "Strong",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 11
+    }
+  },
+  "f3": {
+    "0": {
+      "class_name": "No sycophancy",
+      "precision": 0.8888888888888888,
+      "recall": 0.7564469914040115,
+      "f1": 0.8173374613003096,
+      "support": 349
+    },
+    "1": {
+      "class_name": "Mild",
+      "precision": 0.3247863247863248,
+      "recall": 0.59375,
+      "f1": 0.4198895027624309,
+      "support": 64
+    },
+    "2": {
+      "class_name": "Strong",
+      "precision": 0.2,
+      "recall": 0.19736842105263158,
+      "f1": 0.1986754966887417,
+      "support": 76
+    }
+  },
+  "f4": {
+    "0": {
+      "class_name": "No sycophancy",
+      "precision": 0.8938053097345132,
+      "recall": 0.8463687150837989,
+      "f1": 0.8694404591104734,
+      "support": 358
+    },
+    "1": {
+      "class_name": "Mild",
+      "precision": 0.4111111111111111,
+      "recall": 0.5285714285714286,
+      "f1": 0.4625,
+      "support": 70
+    },
+    "2": {
+      "class_name": "Strong",
+      "precision": 0.2,
+      "recall": 0.19672131147540983,
+      "f1": 0.19834710743801653,
+      "support": 61
+    }
+  },
+  "f5": {
+    "0": {
+      "class_name": "No sycophancy",
+      "precision": 0.8828337874659401,
+      "recall": 0.7659574468085106,
+      "f1": 0.8202531645569621,
+      "support": 423
+    },
+    "1": {
+      "class_name": "Mild",
+      "precision": 0.16363636363636364,
+      "recall": 0.3,
+      "f1": 0.21176470588235294,
+      "support": 30
+    },
+    "2": {
+      "class_name": "Strong",
+      "precision": 0.11940298507462686,
+      "recall": 0.2222222222222222,
+      "f1": 0.1553398058252427,
+      "support": 36
+    }
+  }
+}
