@@ -17,8 +17,6 @@ const ComparisonPage = lazy(() => import("./pages/ComparisonPage.jsx"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage.jsx"));
 const AdminPage = lazy(() => import("./pages/AdminPage.jsx"));
 const BenchmarksPage = lazy(() => import("./pages/BenchmarksPage.jsx"));
-const PrototypeIndexPage = lazy(() => import("./pages/PrototypeIndexPage.jsx"));
-const PrototypeAnalysisPage = lazy(() => import("./pages/PrototypeAnalysisPage.jsx"));
 
 function PageLoader() {
   return (
@@ -87,10 +85,8 @@ export default function App() {
               />
             }
           />
-          <Route path="/prototype" element={withLoader(<PrototypeIndexPage />)} />
           <Route path="/history" element={withLoader(<HistoryPage />)} />
           <Route path="/benchmarks" element={withLoader(<BenchmarksPage />)} />
-          <Route path="/prototype" element={withLoader(<PrototypeAnalysisPage />)} />
 
           <Route element={<SubmissionLayout />}>
             <Route path="/submissions/:id" element={withLoader(<SubmissionDetailsPage />)} />
@@ -98,7 +94,6 @@ export default function App() {
             <Route path="/submissions/:id/analysis" element={withLoader(<AnalysisPage />)} />
             <Route path="/submissions/:id/metrics" element={withLoader(<MetricsPage />)} />
             <Route path="/submissions/:id/comparison" element={withLoader(<ComparisonPage />)} />
-            <Route path="/submissions/:id/prototype-analysis" element={withLoader(<PrototypeAnalysisPage />)} />
           </Route>
         </Route>
       </Route>
@@ -114,3 +109,5 @@ export default function App() {
     </Routes>
   );
 }
+
+

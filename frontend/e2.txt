@@ -1,0 +1,48 @@
+[33m[plugin vite:esbuild] src/App.jsx: [33mThe character "}" is not valid inside a JSX element[33m
+86 |              }
+87 |            />
+88 |            )} />
+   |             ^
+89 |            <Route path="/history" element={withLoader(<HistoryPage />)} />
+90 |            <Route path="/benchmarks" element={withLoader(<BenchmarksPage />)} />
+[39m
+[33m[plugin vite:esbuild] src/App.jsx: [33mThe character ">" is not valid inside a JSX element[33m
+86 |              }
+87 |            />
+88 |            )} />
+   |                ^
+89 |            <Route path="/history" element={withLoader(<HistoryPage />)} />
+90 |            <Route path="/benchmarks" element={withLoader(<BenchmarksPage />)} />
+[39m
+[33m[plugin vite:esbuild] src/App.jsx: [33mThe character "}" is not valid inside a JSX element[33m
+89 |            <Route path="/history" element={withLoader(<HistoryPage />)} />
+90 |            <Route path="/benchmarks" element={withLoader(<BenchmarksPage />)} />
+91 |            )} />
+   |             ^
+92 |  
+93 |            <Route element={<SubmissionLayout />}>
+[39m
+[33m[plugin vite:esbuild] src/App.jsx: [33mThe character ">" is not valid inside a JSX element[33m
+89 |            <Route path="/history" element={withLoader(<HistoryPage />)} />
+90 |            <Route path="/benchmarks" element={withLoader(<BenchmarksPage />)} />
+91 |            )} />
+   |                ^
+92 |  
+93 |            <Route element={<SubmissionLayout />}>
+[39m
+[33m[plugin vite:esbuild] src/App.jsx: [33mThe character "}" is not valid inside a JSX element[33m
+97 |              <Route path="/submissions/:id/metrics" element={withLoader(<MetricsPage />)} />
+98 |              <Route path="/submissions/:id/comparison" element={withLoader(<ComparisonPage />)} />
+99 |              )} />
+   |               ^
+100|            </Route>
+101|          </Route>
+[39m
+[33m[plugin vite:esbuild] src/App.jsx: [33mThe character ">" is not valid inside a JSX element[33m
+97 |              <Route path="/submissions/:id/metrics" element={withLoader(<MetricsPage />)} />
+98 |              <Route path="/submissions/:id/comparison" element={withLoader(<ComparisonPage />)} />
+99 |              )} />
+   |                  ^
+100|            </Route>
+101|          </Route>
+[39m
