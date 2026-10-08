@@ -1,0 +1,31 @@
+{
+  "class_weight_formula": "weight_c = N / (K * count_c); K = NUM_CLASSES = 3; N and count_c derived from the TRAINING split only, per facet; sample_weight[i] = weight_{y_i}",
+  "colsample_bytree": 0.8,
+  "dataset_path": "ml/analysis/annotated_3322.csv",
+  "embedding_source": "bge",
+  "feature": "prompt_response",
+  "input_dim": 1536,
+  "learning_rate": 0.05,
+  "max_depth": 6,
+  "n_estimators": 300,
+  "n_jobs": 6,
+  "num_class": 3,
+  "objective": "multi:softprob",
+  "random_state": 42,
+  "reg_alpha": 0.0,
+  "reg_lambda": 1.0,
+  "run_name": "xgboost_prompt_response_seed42_v2",
+  "script_version": "0.2.0",
+  "seed": 42,
+  "selection_criterion": "fixed baseline: n_estimators=300, no early stopping, no hyperparameter search; primary reported metric = mean macro-F1 across the five facets (validation, then final test evaluation)",
+  "split_counts": {
+    "test": 636,
+    "total": 4322,
+    "train": 3050,
+    "validation": 636
+  },
+  "split_path": "ml/splits/split_assignments_v2.csv",
+  "subsample": 0.8,
+  "tree_method": "hist",
+  "xgboost_version": "3.4.1"
+}

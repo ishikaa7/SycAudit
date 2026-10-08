@@ -1,0 +1,23 @@
+{
+  "annotated_csv": "ml/analysis/annotated_3322.csv",
+  "annotated_rows": 4322,
+  "duplicate_annotated_ids": 0,
+  "duplicate_split_ids": 0,
+  "extra_in_split": 0,
+  "feature_dim": 1536,
+  "feature_dtype": "float32",
+  "feature_inf": 0,
+  "feature_nan": 0,
+  "feature_rows": 5100,
+  "id_coverage_match": true,
+  "invalid_split_names": [],
+  "mapped_unique": 4322,
+  "missing_from_split": 0,
+  "ok": true,
+  "split_csv": "ml/splits/split_assignments_v2.csv",
+  "split_rows": 4322,
+  "targets_valid": true,
+  "test_count": 636,
+  "train_count": 3050,
+  "validation_count": 636
+}

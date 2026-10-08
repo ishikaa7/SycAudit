@@ -19,6 +19,18 @@ Protocol: train + validation via ``build_datasets(use_test=False)``; the test
 split is loaded and evaluated ONLY after validation evaluation is complete and
 never influences fitting, weights, or configuration.
 
+``--embedding-source {bge,gte}`` selects the frozen embedding matrix
+(default ``bge`` = the existing BGE ``response_only`` baseline, unchanged).
+``gte`` loads ``embeddings/gte/response_embeddings.npy`` +
+``embeddings/gte/metadata.json`` (response-only, 768-d, canonical-ID aligned,
+verified by metadata row IDs + the parent-dataset id hash -- never by row
+position) and is rejected for any ``--feature`` other than ``response_only``.
+Nothing about the XGBoost configuration, split, weighting, metrics, or test
+isolation changes with the embedding source::
+
+    python scripts/train_xgboost.py --seed 42 --split-csv ml/splits/split_assignments_v2.csv \
+        --embedding-source gte --dry-run          # -> xgboost_gte_response_only_seed42_v2
+
 CLI defaults keep the V1-compatible interface; the V2 experiment is::
 
     python scripts/train_xgboost.py --seed 42 --run-name xgboost_response_only_seed42_v2
@@ -33,6 +45,7 @@ exercise the XGBoost API, and creates no run directory.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import platform
 import subprocess
@@ -51,7 +64,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import ml.training as tr
 
-SCRIPT_VERSION = "0.1.0"
+SCRIPT_VERSION = "0.2.0"
 RUN_DIR = "ml/training/runs"
 
 # Controlled baseline configuration -- fixed for this experiment.
@@ -102,7 +115,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--feature",
         choices=list(tr.config.FEATURE_DIMENSIONS),
         default="response_only",
-        help="BGE feature representation (baseline uses response_only).",
+        help="Feature representation (baseline uses response_only; "
+        "--embedding-source gte only supports response_only).",
+    )
+    p.add_argument(
+        "--embedding-source",
+        choices=list(tr.dataset.EMBEDDING_SOURCES),
+        default="bge",
+        help="Frozen embedding source: 'bge' (existing BGE feature matrices, "
+        "default, baseline behavior unchanged) or 'gte' "
+        "(embeddings/gte/response_embeddings.npy, response-only only).",
     )
     p.add_argument(
         "--annotated-csv",
@@ -151,11 +173,20 @@ def split_tag(split_csv: str) -> str:
     return remainder.lstrip("_")
 
 
-def default_run_name(args: argparse.Namespace, feature_name: str, split_csv: str) -> str:
-    """``xgboost_<feature>_seed<seed>`` suffixed by the split tag (v2, ...)."""
+def default_run_name(
+    args: argparse.Namespace, feature_name: str, split_csv: str, embedding_source: str = "bge"
+) -> str:
+    """``xgboost_<feature>_seed<seed>`` suffixed by the split tag (v2, ...).
+
+    The default BGE source keeps the exact historical names
+    (``xgboost_response_only_seed42_v2``); ``gte`` inserts the source tag so
+    GTE runs land in their own directory
+    (``xgboost_gte_response_only_seed42_v2``).
+    """
     if args.run_name:
         return args.run_name
-    name = f"xgboost_{feature_name}_seed{args.seed}"
+    prefix = "xgboost" if embedding_source == "bge" else f"xgboost_{embedding_source}"
+    name = f"{prefix}_{feature_name}_seed{args.seed}"
     tag = split_tag(split_csv)
     return f"{name}_{tag}" if tag else name
 
@@ -186,9 +217,9 @@ def load_frames(root: Path, annotated_csv: str, split_csv: str):
     return annotated, splits
 
 
-def split_index(root: Path, annotated: pd.DataFrame, splits: pd.DataFrame):
+def split_index(root: Path, annotated: pd.DataFrame, splits: pd.DataFrame, embedding_source: str = "bge"):
     """Canonical-ID based row index/assignment for every annotated row."""
-    idxs = tr.dataset.mapping_indexes(root, annotated)
+    idxs = tr.dataset.mapping_indexes(root, annotated, embedding_source=embedding_source)
     split_of = dict(zip(splits["canonical_id"].astype(str), splits["split"].astype(str)))
     assigned = np.asarray(
         [split_of[cid] for cid in annotated["canonical_id"].astype(str)], dtype=object
@@ -258,6 +289,108 @@ def cross_check_losses_module(y_train: np.ndarray, weights: dict[str, np.ndarray
         if not np.allclose(ref[facet].numpy(), weights[facet], rtol=1e-5, atol=1e-6):
             return False
     return True
+
+
+def verify_gte_identity(root: Path) -> tuple[bool, dict]:
+    """GTE row-identity checks: metadata, row order, id hash, shape/dtype/finite.
+
+    The GTE matrix must be provably the same parent rows as the BGE matrix:
+    ``row_ids`` must equal the parent CSV ``id`` column (order + values), and
+    ``dataset_id_hash`` must equal both a freshly recomputed hash of that
+    column and the hash recorded by the BGE embeddings.  Row position alone is
+    never trusted.  Returns ``(all_ok, metadata)``.
+    """
+    npy_path = root / tr.dataset.GTE_DIR / tr.dataset.GTE_NPY
+    meta_path = root / tr.dataset.GTE_DIR / tr.dataset.GTE_METADATA_JSON
+    bge_meta_path = root / "embeddings" / "bge" / "metadata.json"
+    print("\n  GTE embedding identity (embeddings/gte):")
+    ok = True
+
+    exists_ok = npy_path.exists() and meta_path.exists()
+    ok &= check(
+        "GTE artifacts exist (response_embeddings.npy + metadata.json)",
+        exists_ok,
+        f"npy={npy_path.exists()} metadata={meta_path.exists()}",
+    )
+    if not exists_ok:
+        return False, {}
+
+    try:
+        meta = json.loads(meta_path.read_text(encoding="utf-8-sig"))
+        ok &= check("GTE metadata parses as JSON", True)
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        check("GTE metadata parses as JSON", False, str(exc))
+        return False, {}
+
+    required = (
+        "row_ids", "dataset_row_count", "embedding_dimension", "dataset_id_hash",
+        "id_column", "normalized", "embedding_model",
+    )
+    missing = [k for k in required if k not in meta]
+    ok &= check("required metadata keys present", not missing,
+                ",".join(missing) or f"all {len(required)}")
+
+    ok &= check(
+        "embedding_model identifies GTE",
+        "gte" in str(meta.get("embedding_model", "")).lower(),
+        str(meta.get("embedding_model")),
+    )
+    ok &= check("metadata normalized flag == True", meta.get("normalized") is True,
+                str(meta.get("normalized")))
+    ok &= check("metadata embedding_dimension == 768",
+                int(meta.get("embedding_dimension", -1)) == 768,
+                str(meta.get("embedding_dimension")))
+    ok &= check("metadata id_column == 'id'", meta.get("id_column") == "id",
+                str(meta.get("id_column")))
+
+    x = np.load(npy_path, mmap_mode="r")
+    n_rows = int(x.shape[0])
+    ok &= check("matrix dtype float32", x.dtype == np.float32, str(x.dtype))
+    ok &= check(
+        "matrix shape == (dataset_row_count, 768)",
+        x.ndim == 2 and x.shape[1] == 768 and int(meta.get("dataset_row_count", -1)) == n_rows,
+        f"shape={tuple(x.shape)} dataset_row_count={meta.get('dataset_row_count')}",
+    )
+    ok &= check("matrix fully finite (no NaN/Inf)", bool(np.isfinite(x).all()),
+                f"checked {n_rows}x{x.shape[1] if x.ndim == 2 else '?'} values")
+
+    row_ids = [str(v) for v in meta.get("row_ids", [])]
+    ok &= check(
+        "row_ids count == matrix rows and all unique",
+        len(row_ids) == n_rows and len(set(row_ids)) == n_rows,
+        f"{len(row_ids)} ids / {len(set(row_ids))} unique / {n_rows} rows",
+    )
+
+    parent = pd.read_csv(root / tr.dataset.PARENT_CSV, encoding="utf-8-sig")
+    parent_ids = parent["id"].astype(str).tolist()
+    ok &= check(
+        "row_ids == parent id column (order + values)",
+        row_ids == parent_ids,
+        f"{len(row_ids)} vs {len(parent_ids)} parent ids",
+    )
+
+    hasher = hashlib.sha256()
+    for value in parent_ids:
+        hasher.update(value.encode("utf-8"))
+        hasher.update(b"\x00")
+    recomputed = hasher.hexdigest()
+    ok &= check(
+        "recomputed parent id-column hash == metadata dataset_id_hash",
+        recomputed == str(meta.get("dataset_id_hash", "")),
+        recomputed[:16],
+    )
+    if bge_meta_path.exists():
+        bge_hash = str(
+            json.loads(bge_meta_path.read_text(encoding="utf-8-sig")).get("dataset_id_hash", "")
+        )
+        ok &= check(
+            "GTE dataset_id_hash == BGE dataset_id_hash (same row identity)",
+            bge_hash == str(meta.get("dataset_id_hash", "")),
+            f"bge={bge_hash[:16]}",
+        )
+    else:
+        ok &= check("BGE metadata available for hash cross-check", False, str(bge_meta_path))
+    return ok, meta
 
 
 def predictions_frame(
@@ -494,21 +627,23 @@ def dry_run(
         params == {**XGB_PARAMS, "random_state": args.seed},
         json.dumps(params, sort_keys=True),
     )
-    print(f"  config preview: feature={feature_name} input_dim={input_dim} seed={args.seed}")
+    print(f"  config preview: feature={feature_name} embedding_source={args.embedding_source} "
+          f"input_dim={input_dim} seed={args.seed}")
     print(f"  xgboost={xgb.__version__}  n_jobs={params['n_jobs']}  tree_method={params['tree_method']}")
     print(f"  selection_criterion: {SELECTION_CRITERION}")
     print(f"  class-weight formula: {CLASS_WEIGHT_FORMULA}")
     print(f"  run name: {run_name}")
     print(f"  run dir : {out_dir}")
+    expected_run_name = default_run_name(
+        argparse.Namespace(run_name=None, seed=args.seed),
+        feature_name,
+        args.split_csv,
+        args.embedding_source,
+    )
     all_ok &= check(
-        "run name derives to xgboost_response_only_seed42_v2 for the V2 experiment",
-        run_name == default_run_name(
-            argparse.Namespace(run_name=None, seed=args.seed), "response_only",
-            "ml/splits/split_assignments_v2.csv",
-        )
-        if args.run_name is None
-        else True,
-        f"got {run_name}",
+        "run name derives to the expected default for feature/split/source",
+        run_name == expected_run_name if args.run_name is None else True,
+        f"got {run_name} expected {expected_run_name}",
     )
     exists = out_dir.exists()
     print(
@@ -565,9 +700,20 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     root = repo_root()
 
+    if args.embedding_source == "gte" and args.feature != "response_only":
+        print(
+            f"ERROR: incompatible combination: --embedding-source gte --feature {args.feature}. "
+            "The GTE source provides response-only embeddings only "
+            f"({tr.dataset.GTE_DIR}/{tr.dataset.GTE_NPY}); use --feature response_only "
+            "with --embedding-source gte, or --embedding-source bge for the other "
+            f"feature spaces (choices: {list(tr.config.FEATURE_DIMENSIONS)}).",
+            file=sys.stderr,
+        )
+        return 1
+
     feature_name = args.feature
     input_dim = tr.config.FEATURE_DIMENSIONS[feature_name]
-    run_name = default_run_name(args, feature_name, args.split_csv)
+    run_name = default_run_name(args, feature_name, args.split_csv, args.embedding_source)
     out_dir = root / RUN_DIR / run_name
 
     print("=" * 70)
@@ -579,6 +725,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  python   : {sys.version.split()[0]} ({sys.executable})")
     print(f"  platform : {platform.platform()}")
     print(f"  xgboost  : {xgb.__version__}")
+    print(f"  embedding: source={args.embedding_source}"
+          + (" (embeddings/gte/response_embeddings.npy, response-only)"
+             if args.embedding_source == "gte" else " (embeddings/bge/features)"))
     print(f"  feature  : {feature_name}  input_dim={input_dim}  seed={args.seed}")
     print(f"  annotated: {args.annotated_csv}")
     print(f"  split    : {args.split_csv}")
@@ -593,13 +742,22 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     print("\n[2/7] Preflight alignment + safety checks")
-    x_full, row_ids = tr.dataset.load_feature_matrix(root, feature_name)
+    gte_meta: dict = {}
+    if args.embedding_source == "gte":
+        gte_ok, gte_meta = verify_gte_identity(root)
+        if not gte_ok:
+            print("[GTE identity] FAILED", file=sys.stderr)
+            return 1
+    x_full, row_ids = tr.dataset.load_feature_matrix(
+        root, feature_name, embedding_source=args.embedding_source
+    )
     report = tr.dataset.preflight_alignment(
         root,
         x=x_full,
         feature_name=feature_name,
         annotated_csv=args.annotated_csv,
         split_csv=args.split_csv,
+        embedding_source=args.embedding_source,
     )
     n_total = report.annotated_rows
     n_train = report.train_count
@@ -646,7 +804,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     annotated, splits = load_frames(root, args.annotated_csv, args.split_csv)
-    idxs, assigned, ids = split_index(root, annotated, splits)
+    idxs, assigned, ids = split_index(root, annotated, splits, embedding_source=args.embedding_source)
 
     print("\n[3/7] Building train/validation datasets (test NOT loaded)")
     datasets, report2 = tr.dataset.build_datasets(
@@ -655,6 +813,7 @@ def main(argv: list[str] | None = None) -> int:
         use_test=False,
         annotated_csv=args.annotated_csv,
         split_csv=args.split_csv,
+        embedding_source=args.embedding_source,
     )
     if not report2.ok:
         print("[build_datasets] FAILED:\n  " + "\n  ".join(report2.errors), file=sys.stderr)
@@ -742,6 +901,7 @@ def main(argv: list[str] | None = None) -> int:
         use_test=True,
         annotated_csv=args.annotated_csv,
         split_csv=args.split_csv,
+        embedding_source=args.embedding_source,
     )
     if not report3.ok:
         print("[build_datasets(test)] FAILED:\n  " + "\n  ".join(report3.errors), file=sys.stderr)
@@ -800,6 +960,7 @@ def main(argv: list[str] | None = None) -> int:
         "run_name": run_name,
         "dataset_path": args.annotated_csv,
         "split_path": args.split_csv,
+        "embedding_source": args.embedding_source,
         "feature": feature_name,
         "input_dim": input_dim,
         "seed": args.seed,
@@ -892,6 +1053,7 @@ def main(argv: list[str] | None = None) -> int:
         "repository_head": git_head(root),
         "mode": "train",
         "run_name": run_name,
+        "embedding_source": args.embedding_source,
         "feature": feature_name,
         "annotated_csv": args.annotated_csv,
         "split_csv": args.split_csv,
@@ -926,6 +1088,19 @@ def main(argv: list[str] | None = None) -> int:
         },
         "outputs": OUTPUTS,
     }
+
+    if args.embedding_source == "gte" and gte_meta:
+        gte_provenance = {
+            "embedding_model": gte_meta.get("embedding_model"),
+            "response_embeddings_path": f"{tr.dataset.GTE_DIR}/{tr.dataset.GTE_NPY}",
+            "metadata_path": f"{tr.dataset.GTE_DIR}/{tr.dataset.GTE_METADATA_JSON}",
+            "dataset_id_hash": gte_meta.get("dataset_id_hash"),
+            "dataset_row_count": gte_meta.get("dataset_row_count"),
+            "embedding_dimension": gte_meta.get("embedding_dimension"),
+            "normalized": gte_meta.get("normalized"),
+        }
+        config_dict["gte_embedding"] = gte_provenance
+        manifest["gte_embedding"] = gte_provenance
 
     write_json(out_dir / "config.json", config_dict, sort_keys=True)
     write_json(out_dir / "alignment_record.json", report.to_dict(), sort_keys=True)

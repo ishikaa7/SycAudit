@@ -1,0 +1,90 @@
+{
+  "class_weight_formula": "weight_c = N / (K * count_c); K = NUM_CLASSES = 3; N and count_c derived from the TRAINING split only, per facet; sample_weight[i] = weight_{y_i}",
+  "created_utc": "2026-10-08T18:08:11.466061+00:00",
+  "fixed_configuration": {
+    "colsample_bytree": 0.8,
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "n_estimators": 300,
+    "n_jobs": 6,
+    "num_class": 3,
+    "objective": "multi:softprob",
+    "random_state": 42,
+    "reg_alpha": 0.0,
+    "reg_lambda": 1.0,
+    "subsample": 0.8,
+    "tree_method": "hist"
+  },
+  "models": [
+    {
+      "classes_": [
+        0,
+        1,
+        2
+      ],
+      "estimator": "xgboost.XGBClassifier",
+      "facet": "f1",
+      "fit_seconds": 153.568,
+      "n_estimators": 300,
+      "n_features": 1536,
+      "n_train_rows": 3050
+    },
+    {
+      "classes_": [
+        0,
+        1,
+        2
+      ],
+      "estimator": "xgboost.XGBClassifier",
+      "facet": "f2",
+      "fit_seconds": 72.024,
+      "n_estimators": 300,
+      "n_features": 1536,
+      "n_train_rows": 3050
+    },
+    {
+      "classes_": [
+        0,
+        1,
+        2
+      ],
+      "estimator": "xgboost.XGBClassifier",
+      "facet": "f3",
+      "fit_seconds": 140.314,
+      "n_estimators": 300,
+      "n_features": 1536,
+      "n_train_rows": 3050
+    },
+    {
+      "classes_": [
+        0,
+        1,
+        2
+      ],
+      "estimator": "xgboost.XGBClassifier",
+      "facet": "f4",
+      "fit_seconds": 122.108,
+      "n_estimators": 300,
+      "n_features": 1536,
+      "n_train_rows": 3050
+    },
+    {
+      "classes_": [
+        0,
+        1,
+        2
+      ],
+      "estimator": "xgboost.XGBClassifier",
+      "facet": "f5",
+      "fit_seconds": 97.46,
+      "n_estimators": 300,
+      "n_features": 1536,
+      "n_train_rows": 3050
+    }
+  ],
+  "python_version": "3.14.3 (main, Mar  3 2026, 15:00:44) [MSC v.1944 64 bit (AMD64)]",
+  "script_version": "0.2.0",
+  "selection_criterion": "fixed baseline: n_estimators=300, no early stopping, no hyperparameter search; primary reported metric = mean macro-F1 across the five facets (validation, then final test evaluation)",
+  "training_protocol": "five independent 3-class XGBClassifier models fit on the train split only; validation used for reporting; the test split was loaded and evaluated only after validation evaluation completed and did not influence fitting, weights, or configuration",
+  "xgboost_version": "3.4.1"
+}

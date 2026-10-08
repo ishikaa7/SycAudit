@@ -1,8 +1,11 @@
 """Dataset loading and canonical-ID -> feature-row alignment.
 
-The ONLY model inputs are the frozen BGE feature representations.  Facet
-labels are targets and are never inputs.  All alignment is ID-based and fails
-loudly rather than silently repairing bad data.
+The ONLY model inputs are the frozen embedding feature representations
+(``embedding_source='bge'`` by default; ``'gte'`` selects
+``embeddings/gte/response_embeddings.npy``).  Facet labels are targets and are
+never inputs.  All alignment is ID-based and fails loudly rather than silently
+repairing bad data.  Every function keeps its historical BGE default, so
+existing callers behave exactly as before.
 """
 
 from __future__ import annotations
@@ -20,6 +23,11 @@ from torch.utils.data import DataLoader, Dataset
 from .config import FEATURE_DIMENSIONS, FACETS
 
 FEATURES_DIR = "embeddings/bge/features"
+GTE_DIR = "embeddings/gte"
+GTE_NPY = "response_embeddings.npy"
+GTE_METADATA_JSON = "metadata.json"
+GTE_FEATURE = "response_only"
+EMBEDDING_SOURCES = ("bge", "gte")
 ANNOTATED_CSV = "ml/analysis/annotated_3322.csv"
 SPLIT_CSV = "ml/splits/split_assignments.csv"
 PARENT_CSV = "dataset/combined/combined_evaluator_dataset.csv"
@@ -199,7 +207,46 @@ def repo_root() -> Path:
     return Path(out.stdout.strip())
 
 
-def read_feature_metadata(root: Path) -> dict:
+def check_embedding_source(embedding_source: str) -> str:
+    if embedding_source not in EMBEDDING_SOURCES:
+        raise ValueError(
+            f"Unknown embedding source {embedding_source!r}; expected one of "
+            f"{list(EMBEDDING_SOURCES)}."
+        )
+    return embedding_source
+
+
+def read_feature_metadata(root: Path, embedding_source: str = "bge") -> dict:
+    """Read feature metadata in the schema used by the alignment functions.
+
+    For ``embedding_source='gte'`` the row-identity schema written by the GTE
+    generator (``row_ids`` / ``dataset_row_count`` / ``embedding_dimension``)
+    is adapted in memory to the features-directory schema
+    (``ordered_row_ids`` / ``number_of_rows`` / ``feature_dimensions``); no
+    file on disk is created or modified.  BGE (default) is unchanged.
+    """
+    check_embedding_source(embedding_source)
+    if embedding_source == "gte":
+        meta_path = repo_root() / GTE_DIR / GTE_METADATA_JSON
+        if not meta_path.exists():
+            raise AlignmentError(f"Missing GTE metadata: {meta_path}")
+        with meta_path.open("r", encoding="utf-8-sig") as fh:
+            gte = json.load(fh)
+        for key in ("row_ids", "dataset_row_count", "embedding_dimension"):
+            if key not in gte:
+                raise AlignmentError(f"GTE metadata {meta_path} is missing required key {key!r}.")
+        row_ids = [str(v) for v in gte["row_ids"]]
+        return {
+            "number_of_rows": int(gte["dataset_row_count"]),
+            "feature_dimensions": {GTE_FEATURE: int(gte["embedding_dimension"])},
+            "ordered_row_ids": row_ids,
+            # provenance passthrough (not used by the alignment math)
+            "embedding_source": "gte",
+            "embedding_model": gte.get("embedding_model"),
+            "normalized": gte.get("normalized"),
+            "dataset_id_hash": gte.get("dataset_id_hash"),
+            "id_column": gte.get("id_column"),
+        }
     features_dir = repo_root() / FEATURES_DIR
     meta_path = features_dir / "metadata.json"
     if not meta_path.exists():
@@ -208,16 +255,26 @@ def read_feature_metadata(root: Path) -> dict:
         return json.load(fh)
 
 
-def load_feature_matrix(root: Path, feature_name: str) -> tuple[np.ndarray, list[str]]:
+def load_feature_matrix(
+    root: Path, feature_name: str, embedding_source: str = "bge"
+) -> tuple[np.ndarray, list[str]]:
     """Load a frozen feature matrix + its ordered row IDs with hard checks."""
     if feature_name not in FEATURE_DIMENSIONS:
         raise ValueError(f"Unknown feature representation {feature_name!r}.")
-    features_dir = repo_root() / FEATURES_DIR
-    npy_path = features_dir / f"{feature_name}.npy"
+    check_embedding_source(embedding_source)
+    if embedding_source == "gte":
+        if feature_name != GTE_FEATURE:
+            raise AlignmentError(
+                f"embedding_source='gte' provides only the {GTE_FEATURE!r} matrix "
+                f"({GTE_DIR}/{GTE_NPY}); cannot load feature {feature_name!r}."
+            )
+        npy_path = repo_root() / GTE_DIR / GTE_NPY
+    else:
+        npy_path = repo_root() / FEATURES_DIR / f"{feature_name}.npy"
     if not npy_path.exists():
         raise AlignmentError(f"Missing frozen feature matrix: {npy_path}")
 
-    meta = read_feature_metadata(root)
+    meta = read_feature_metadata(root, embedding_source=embedding_source)
     x = np.load(npy_path, mmap_mode="r")
     if x.dtype != np.float32:
         raise AlignmentError(
@@ -256,6 +313,7 @@ def preflight_alignment(
     feature_name: str,
     annotated_csv: str = ANNOTATED_CSV,
     split_csv: str = SPLIT_CSV,
+    embedding_source: str = "bge",
 ) -> AlignmentReport:
     """Run every explicit alignment / safety check and return a report."""
     report = AlignmentReport()
@@ -294,7 +352,9 @@ def preflight_alignment(
     report.feature_dim = int(x.shape[1])
     report.feature_dtype = str(x.dtype)
 
-    row_ids = [str(v) for v in read_feature_metadata(root)["ordered_row_ids"]]
+    row_ids = [str(v) for v in read_feature_metadata(
+        root, embedding_source=embedding_source
+    )["ordered_row_ids"]]
     if report.feature_rows != 5100:
         report.errors.append(f"feature matrix rows={report.feature_rows} != 5100.")
     if row_ids != parent_ids:
@@ -343,9 +403,13 @@ def preflight_alignment(
     return report
 
 
-def mapping_indexes(root: Path, annotated: pd.DataFrame) -> np.ndarray:
+def mapping_indexes(
+    root: Path, annotated: pd.DataFrame, embedding_source: str = "bge"
+) -> np.ndarray:
     """Return the feature-matrix row index for each annotated row."""
-    row_ids = [str(v) for v in read_feature_metadata(root)["ordered_row_ids"]]
+    row_ids = [str(v) for v in read_feature_metadata(
+        root, embedding_source=embedding_source
+    )["ordered_row_ids"]]
     id_index = {rid: i for i, rid in enumerate(row_ids)}
     ids = annotated["canonical_id"].astype(str).tolist()
     unresolved = sorted({cid for cid in ids if cid not in id_index})
@@ -390,14 +454,18 @@ def build_datasets(
     use_test: bool = False,
     annotated_csv: str = ANNOTATED_CSV,
     split_csv: str = SPLIT_CSV,
+    embedding_source: str = "bge",
 ) -> tuple[dict[str, SycAuditDataset], AlignmentReport]:
     """Align + slice the frozen feature matrix into train/validation(/test).
 
     ``annotated_csv`` / ``split_csv`` default to the frozen V1 pair, so existing callers
     behave exactly as before; pass the V2 split to load Dataset V2.  Per-split expected
     counts are derived from the split assignment itself rather than hardcoded.
+    ``embedding_source`` selects the frozen matrix (``'bge'`` default, ``'gte'``
+    for ``embeddings/gte/response_embeddings.npy``); all alignment remains
+    canonical-ID based.
     """
-    x, _ = load_feature_matrix(root, feature_name)
+    x, _ = load_feature_matrix(root, feature_name, embedding_source=embedding_source)
 
     report = preflight_alignment(
         root,
@@ -405,6 +473,7 @@ def build_datasets(
         feature_name=feature_name,
         annotated_csv=annotated_csv,
         split_csv=split_csv,
+        embedding_source=embedding_source,
     )
     if not report.ok:
         raise AlignmentError("Preflight alignment failed:\n  " + "\n  ".join(report.errors))
@@ -418,7 +487,7 @@ def build_datasets(
             "Dataset/split validation failed:\n  " + "\n  ".join(errors)
         )
 
-    idxs = mapping_indexes(root, annotated)
+    idxs = mapping_indexes(root, annotated, embedding_source=embedding_source)
     split_of = dict(zip(splits["canonical_id"].astype(str), splits["split"].astype(str)))
     assigned = np.asarray(
         [split_of[cid] for cid in annotated["canonical_id"].astype(str)]
