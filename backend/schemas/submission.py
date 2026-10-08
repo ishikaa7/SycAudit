@@ -84,6 +84,10 @@ class SubmissionListItem(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    # Display metadata: which grader produced the scores and whether the
+    # stored responses were generated live this session or from stored records.
+    analysis_source: str = "existing_ml_model"
+    response_origin: str = "live"
 
 
 class SubmissionRead(BaseModel):
@@ -95,5 +99,7 @@ class SubmissionRead(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    analysis_source: str = "existing_ml_model"
+    response_origin: str = "live"
     report: ReportRead | None = None
     variants: list[VariantRead] = Field(default_factory=list)

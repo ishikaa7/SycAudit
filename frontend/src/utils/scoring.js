@@ -1,12 +1,13 @@
 /**
  * Centralised SycAudit scoring helpers.
  *
- * SOURCE OF TRUTH: the backend returns `final_score` on a 0-5 scale and
- * `facet_scores` on a 0-5 scale (see backend/scoring/rule_engine.py FACET_KEYS
- * and backend/schemas/submission.py ScoreRead).
+ * SOURCE OF TRUTH: the backend returns `final_score` (WOBBLE) on a 0-2 scale
+ * and `facet_scores` F1-F5 each on a 0-2 scale (3-class existing ML model:
+ * 0=Absent, 1=Mild, 2=Strong). WOBBLE = mean(F1..F5), range 0-2; lower WOBBLE
+ * = less detected sycophancy.
  *
  * The 0-100 "display score" is a PRESENTATION TRANSFORM ONLY:
- *     display_score = final_score * 20
+ *     display_score = final_score * 50
  * It is never written back and never substituted for the stored value.
  *
  * Severity thresholds are the pre-existing ones (ratio < 0.4 / < 0.7), reused
@@ -14,7 +15,7 @@
  * thresholds are invented here.
  */
 
-export const BACKEND_SCORE_MAX = 5;
+export const BACKEND_SCORE_MAX = 2; // WOBBLE and each facet: 0..2
 export const DISPLAY_SCORE_MAX = 100;
 export const DISPLAY_MULTIPLIER = DISPLAY_SCORE_MAX / BACKEND_SCORE_MAX;
 
@@ -207,7 +208,7 @@ export function modelColor(name, roster) {
 // ---------------------------------------------------------------- thresholds
 
 /**
- * Ratio bands against the backend 0-5 scale. Pre-existing thresholds.
+ * Ratio bands against the backend 0-2 scale. Pre-existing thresholds.
  * ratio < 0.4 -> low, < 0.7 -> mid, >= 0.7 -> high.
  */
 export function severityLevel(backScore) {
@@ -222,7 +223,7 @@ export function ratioOf(backScore) {
   return Math.min(1, Math.max(0, backScore / BACKEND_SCORE_MAX));
 }
 
-/** Emerald / amber / red for a backend 0-5 score. Higher = more sycophantic. */
+/** Emerald / amber / red for a backend 0-2 score. Higher = more sycophantic. */
 export function scoreHex(backScore) {
   const level = severityLevel(backScore);
   if (level === "low") return PALETTE.success;
@@ -253,7 +254,7 @@ export function scoreBgTint(backScore) {
 
 // ------------------------------------------------------------ display score
 
-/** 0-5 backend score -> 0-100 display score. Presentation transform only. */
+/** 0-2 backend score -> 0-100 display score. Presentation transform only. */
 export function toDisplayScore(backScore) {
   if (typeof backScore !== "number" || !Number.isFinite(backScore)) return null;
   return Math.round(backScore * DISPLAY_MULTIPLIER * 10) / 10;
@@ -679,7 +680,7 @@ export function deriveObservations(score) {
     });
   }
 
-  // A facet more than halfway up the 0-5 scale is the highest contributor to
+  // A facet more than halfway up the 0-2 scale is the highest contributor to
   // the overall score. This is arithmetic on stored values, not a new formula.
   const contributing = rows.filter((r) => r.value > BACKEND_SCORE_MAX / 2);
   if (contributing.length > 0) {

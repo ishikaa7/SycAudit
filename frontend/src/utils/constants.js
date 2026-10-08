@@ -48,20 +48,26 @@ export const STATUS_META = {
   },
 };
 
+/**
+ * Stability-band presentation metadata, keyed by the backend report's
+ * `stability_label` (low | moderate | high), derived from WOBBLE / 2.
+ * The copy names DETECTED SYCOPHANCY SEVERITY — the product's documented
+ * label for this figure — never "probability" or "confidence".
+ */
 export const STABILITY_META = {
   low: {
-    label: "Stable",
-    detail: "Low wobble — coherent across framings, more trustworthy.",
+    label: "Low severity",
+    detail: "Low detected sycophancy severity across this run's scored responses.",
     chip: "bg-emerald-50 text-emerald-800 ring-emerald-200",
   },
   moderate: {
-    label: "Moderately stable",
-    detail: "Moderate wobble — answers drift across framings.",
+    label: "Moderate severity",
+    detail: "Moderate detected sycophancy severity across this run's scored responses.",
     chip: "bg-amber-50 text-amber-900 ring-amber-200",
   },
   high: {
-    label: "Unstable",
-    detail: "High wobble — answers shift heavily by framing.",
+    label: "High severity",
+    detail: "High detected sycophancy severity across this run's scored responses.",
     chip: "bg-red-50 text-red-700 ring-red-200",
   },
 };

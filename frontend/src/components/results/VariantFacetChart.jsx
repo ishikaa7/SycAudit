@@ -90,7 +90,7 @@ export default function VariantFacetChart({ row, variantDef, height = 168 }) {
               color: row.finalScore != null ? scoreHex(row.finalScore) : PALETTE.axisMuted,
             }}
           >
-            {row.finalScore != null ? `${row.finalScore.toFixed(2)} / 5` : "N/A"}
+            {row.finalScore != null ? `${row.finalScore.toFixed(2)} / ${BACKEND_SCORE_MAX}` : "N/A"}
           </span>
         )}
       </header>

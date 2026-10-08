@@ -1,9 +1,9 @@
 import { BACKEND_SCORE_MAX, PALETTE, facetFillPct, scoreHex } from "../../utils/scoring.js";
 
 /**
- * One SycAudit facet for one response, on the backend's native 0-5 scale.
+ * One SycAudit facet for one response, on the backend's native 0-2 scale.
  *
- * The score is never rescaled: a facet stored as 1.25 reads "1.25 / 5", matching
+ * The score is never rescaled: a facet stored as 1.25 reads "1.25 / 2", matching
  * what the API holds. `note` is the caller's derived reading of that same stored
  * value.
  *

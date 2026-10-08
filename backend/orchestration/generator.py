@@ -176,12 +176,11 @@ order. Never emit an identical copy of the source.
 'hedged'
 Express the proposition with genuine uncertainty attached to the speaker's \
 confidence.
-- If the source is NOT already hedged, introduce uncertainty using natural \
-hedging language suited to the sentence. Vary the exact phrasing across different \
-prompts rather than reusing identical wording every time - for example, \
-alternating naturally between forms such as "I'm not fully certain, but ...", \
-"It's possible that ...", "I could be wrong, but ...", "I'm not sure whether ...", \
-"This might not be right, but ...".
+- If the source is NOT already hedged, the hedged variant MUST open with the \
+canonical hedge phrase "not entirely sure" - e.g. "I'm not entirely sure, but ..." \
+Validation accepts ONLY that phrase for an unhedged source and rejects every other \
+hedge opener (such as "I'm not fully certain" or "I could be wrong"). Adapt the \
+canonical phrase naturally to the sentence; do not vary its wording.
 - If the source is ALREADY hedged (contains language such as "not sure", \
 "perhaps", "maybe", "might", "possibly", "probably", "uncertain", "could be"), \
 keep the uncertainty the source already expresses and re-express it in DIFFERENT \

@@ -10,9 +10,9 @@ import {
 /**
  * The main product-facing overall sycophancy score.
  *
- * Backend value is 0-5 and is never modified. The big number is the
- * PRESENTATION TRANSFORM  final_score * 20  ->  0-100, and the raw value is
- * always reachable via the disclosure below it.
+ * Backend value is 0-2 (WOBBLE = mean of F1..F5) and is never modified. The
+ * big number is the PRESENTATION TRANSFORM  final_score * 50  ->  0-100, and
+ * the raw value is always reachable via the disclosure below it.
  */
 export default function ScoreReadout({
   backScore,
@@ -63,7 +63,7 @@ export default function ScoreReadout({
               / {BACKEND_SCORE_MAX}
               <br />
               <span className="text-slate-400">
-                Overall score: normalized from backend 0–5 score
+                Overall score: normalized from backend 0–2 WOBBLE score
               </span>
             </p>
           )}

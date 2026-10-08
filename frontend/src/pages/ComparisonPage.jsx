@@ -272,8 +272,9 @@ export default function ComparisonPage() {
         <>
           <div className="mb-5">
             <Notice title="How to read this">
-              Overall scores use the 0–100 display scale, which is the stored backend 0–5 score
-              multiplied by 20. Facets stay on the backend&apos;s native 0–5 scale. Every value is
+              Overall scores use the 0–100 display scale, which is the stored backend 0–
+              {BACKEND_SCORE_MAX} score multiplied by {DISPLAY_SCORE_MAX / BACKEND_SCORE_MAX}. Facets
+              stay on the backend&apos;s native 0–{BACKEND_SCORE_MAX} scale. Every value is
               averaged only across responses that were actually scored, and a lower score means less
               sycophantic. Missing values are shown as N/A and are never counted as zero.
             </Notice>
@@ -411,7 +412,7 @@ export default function ComparisonPage() {
           {/* 4 — FACET PERFORMANCE */}
           <ChartFrame
             title="Facet Performance"
-            caption="Facet score per model, backend 0–5 scale"
+            caption={`Facet score per model, backend 0–${BACKEND_SCORE_MAX} scale`}
             note="Facet scores are aggregated across the evaluated variants."
             footnote={`${FACET_DEFS.map((f) => `${f.id} ${f.label}`).join(" · ")}`}
           >
@@ -436,7 +437,7 @@ export default function ComparisonPage() {
           {/* 5 — FACET x MODEL HEATMAP */}
           <ChartFrame
             title="Facet × Model"
-            caption="Aggregated facet score per model, 0–5"
+            caption={`Aggregated facet score per model, 0–${BACKEND_SCORE_MAX}`}
             footnote="Low values are quiet green, mid amber, high red, on the same 0.4 / 0.7 breakpoints used by the score badges. A dashed cell means no value was stored."
           >
             <ModelFacetHeatmap rows={heatmapRows} max={BACKEND_SCORE_MAX} />
@@ -450,7 +451,8 @@ export default function ComparisonPage() {
           <div className="mb-3">
             <h2 className="section-title">Detailed Model Comparison</h2>
             <p className="section-sub">
-              Overall score on the 0–100 display scale, facets on the backend 0–5 scale.
+              Overall score on the 0–100 display scale, facets on the backend 0–
+              {BACKEND_SCORE_MAX} scale.
             </p>
           </div>
 
@@ -502,7 +504,7 @@ export default function ComparisonPage() {
                                 {m.overallDisplay.toFixed(1)}
                               </span>
                               <span className="block text-[10.5px] tabular-nums text-slate-400">
-                                raw {formatBackScore(m.overallBack)} / 5
+                                raw {formatBackScore(m.overallBack)} / {BACKEND_SCORE_MAX}
                               </span>
                             </>
                           ) : (
@@ -632,8 +634,8 @@ export default function ComparisonPage() {
               </div>
 
               <p className="meta-text mt-4">
-                Scores are the 0–100 display scale, facets the 0–5 backend scale. Response text lives
-                under Results and Sycophancy Analysis.
+                Scores are the 0–100 display scale, facets the 0–{BACKEND_SCORE_MAX} backend scale.
+                Response text lives under Results and Sycophancy Analysis.
               </p>
             </div>
           </details>

@@ -119,7 +119,7 @@ export default function SycophancyAnalysisView({ submission }) {
     level === "low" ? "text-emerald-700" : level === "mid" ? "text-amber-700" : "text-red-600";
 
   // A facet recorded at 0 is the only genuinely problem-free state. Anything
-  // else is toned by how far up the 0-5 scale it sits, so the checkmark colour
+  // else is toned by how far up the 0-2 scale it sits, so the checkmark colour
   // can never disagree with the number next to it.
   const observations = insights
     .filter((i) => i.present)

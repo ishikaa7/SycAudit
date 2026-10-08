@@ -1,4 +1,6 @@
+import logging
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import select
@@ -16,6 +18,12 @@ from schemas.submission import (
     SubmissionRead,
 )
 
+logger = logging.getLogger(__name__)
+
+# Requests served before this instant read responses generated in an EARLIER
+# server run - those runs are surfaced as stored/demo evaluations.
+_SERVER_START = datetime.now(timezone.utc)
+
 router = APIRouter(prefix="/api/submissions", tags=["submissions"])
 
 _RESPONSE_LOADS = (
@@ -26,6 +34,17 @@ _RESPONSE_LOADS = (
     .selectinload(PromptVariant.responses)
     .selectinload(Response.model),
 )
+
+
+def _annotate_analysis(submission: Submission) -> None:
+    """Attach read-only display metadata (not persisted columns)."""
+    submission.analysis_source = "existing_ml_model"
+    created = submission.created_at
+    if created is not None and created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    submission.response_origin = (
+        "live" if created is not None and created >= _SERVER_START else "stored"
+    )
 
 
 @router.post("", response_model=SubmissionCreated, status_code=201)
@@ -57,7 +76,10 @@ async def list_submissions(
         .where(Submission.user_id == current_user.user_id)
         .order_by(Submission.created_at.desc())
     )
-    return list(result.scalars().all())
+    items = list(result.scalars().all())
+    for item in items:
+        _annotate_analysis(item)
+    return items
 
 
 @router.get("/{submission_id}", response_model=SubmissionRead)
@@ -66,6 +88,22 @@ async def get_submission(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Submission:
+    exists = await db.scalar(
+        select(Submission).where(
+            Submission.submission_id == submission_id,
+            Submission.user_id == current_user.user_id,
+        )
+    )
+    if exists is None:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    # Heal path: runs completed before grading was wired (stored/demo records)
+    # are scored here with the same existing ML model, once.
+    if exists.status == "completed":
+        from scoring.service import heal_scored
+
+        await heal_scored(submission_id)
+
     submission = await db.scalar(
         select(Submission)
         .options(selectinload(Submission.report), *_RESPONSE_LOADS)
@@ -76,4 +114,5 @@ async def get_submission(
     )
     if submission is None:
         raise HTTPException(status_code=404, detail="Submission not found")
+    _annotate_analysis(submission)
     return submission

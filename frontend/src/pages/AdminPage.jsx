@@ -116,7 +116,7 @@ export default function AdminPage() {
             <tbody>
               {models.map((model) => {
                 const avg = getAvgScore(model);
-                const pct = avg === null ? 0 : Math.min(100, (avg / 5) * 100);
+                const pct = avg === null ? 0 : Math.min(100, (avg / 2) * 100);
                 return (
                   <tr
                     key={model.model_id}

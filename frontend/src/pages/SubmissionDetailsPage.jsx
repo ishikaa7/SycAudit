@@ -11,6 +11,7 @@ import FacetRadar from "../components/ui/FacetRadar.jsx";
 import FacetBars from "../components/ui/FacetBars.jsx";
 import WobbleSection from "../components/results/WobbleSection.jsx";
 import {
+  BACKEND_SCORE_MAX,
   buildMatrix,
   collectModels,
   collectVariants,
@@ -102,6 +103,18 @@ export default function SubmissionDetailsPage() {
       <SubmissionHeader submission={submission} />
       <PendingBanner status={submission?.status} />
 
+      {/* Grader provenance: where the numbers on this page come from. */}
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-[11.5px] font-semibold text-indigo-800 ring-1 ring-inset ring-indigo-200">
+          Analysis source: Existing ML model (baseline response_only)
+        </span>
+        {submission?.response_origin === "stored" && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-[11.5px] font-semibold text-amber-900 ring-1 ring-inset ring-amber-200">
+            Demo / stored evaluation — responses from stored records
+          </span>
+        )}
+      </div>
+
       {!hasReport ? (
         /* One coherent empty state. No report-dependent section renders below. */
         <div className="mb-6">
@@ -137,7 +150,7 @@ export default function SubmissionDetailsPage() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11.5px] font-bold text-emerald-800 ring-1 ring-inset ring-emerald-200">
-                        Backend recommended · least sycophantic
+                        #1 · Backend recommended · least sycophantic
                       </span>
                       <ScoreBadge backScore={rec.finalScore} />
                     </div>
@@ -152,7 +165,7 @@ export default function SubmissionDetailsPage() {
                   </div>
 
                   <div className="shrink-0 sm:text-right">
-                    <ScoreReadout backScore={rec.finalScore} size="md" caption="Overall score" />
+                    <ScoreReadout backScore={rec.finalScore} size="md" caption="Detected sycophancy severity" />
                   </div>
                 </div>
 
@@ -176,7 +189,7 @@ export default function SubmissionDetailsPage() {
                         </div>
                       </div>
                       <p className="mt-3.5 border-t border-slate-100 pt-3.5 text-[11.5px] text-slate-400">
-                        Raw final_score {formatBackScore(rec.finalScore)} / 5
+                        WOBBLE {formatBackScore(rec.finalScore)} / {BACKEND_SCORE_MAX} — mean(F1–F5); severity {toDisplayScore(rec.finalScore).toFixed(1)} / 100
                       </p>
                     </>
                   )}
@@ -224,9 +237,9 @@ export default function SubmissionDetailsPage() {
             <span className="grid h-6 w-6 place-items-center rounded-lg bg-slate-200 text-[11px] font-bold text-slate-600">
               B
             </span>
-            <h2 className="section-title">Other model scores</h2>
+            <h2 className="section-title">Ranking — other responses</h2>
           </div>
-          <p className="meta-text">lower score = less sycophantic</p>
+          <p className="meta-text">ranked by WOBBLE, lowest first · lower = less detected sycophancy</p>
         </div>
 
         {others.length === 0 && unscoredModels.length === 0 ? (
@@ -241,13 +254,18 @@ export default function SubmissionDetailsPage() {
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {others.map((r) => (
+            {others.map((r, idx) => (
               <article key={`card-${r.response?.response_id}`} className="card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-[13.5px] font-semibold text-slate-900" title={r.modelName}>
-                      {r.modelName}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10.5px] font-bold tabular-nums text-slate-500">
+                        #{idx + 2}
+                      </span>
+                      <p className="truncate text-[13.5px] font-semibold text-slate-900" title={r.modelName}>
+                        {r.modelName}
+                      </p>
+                    </div>
                     <p className="meta-text mt-0.5 truncate">
                       {r.variantLabel}
                       {r.variantSub ? ` · ${r.variantSub}` : ""}
@@ -266,7 +284,7 @@ export default function SubmissionDetailsPage() {
                 <div className="mt-2.5 flex items-center justify-between gap-2">
                   <ScoreBadge backScore={r.finalScore} />
                   <span className="text-[10.5px] tabular-nums text-slate-400">
-                    raw {formatBackScore(r.finalScore)} / 5
+                    raw WOBBLE {formatBackScore(r.finalScore)} / {BACKEND_SCORE_MAX}
                   </span>
                 </div>
                 <div className="mt-3">

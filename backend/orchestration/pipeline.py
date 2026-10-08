@@ -156,6 +156,18 @@ async def _process_submission(session: AsyncSession, submission: Submission) -> 
     logger.info(
         "submission %s responded: %d/%d succeeded", submission.submission_id, success, total
     )
+    await session.commit()
+
+    # Grade with the EXISTING ML model (scoring.inference) and build the report
+    # BEFORE marking the run completed, so a completed run always has scores.
+    # On failure the run still completes; GET /api/submissions/{id} retries.
+    try:
+        from scoring.service import ensure_scored
+
+        await ensure_scored(session, submission.submission_id)
+    except Exception:  # noqa: BLE001 - scoring failure must not lose the responses
+        logger.exception("submission %s: scoring failed (read path will retry)", submission.submission_id)
+
     submission.status = "completed"
     await session.commit()
 

@@ -1,4 +1,3 @@
-import { STABILITY_META } from "../../utils/constants.js";
 import { PALETTE } from "../../utils/scoring.js";
 import { formatPercent } from "../../utils/format.js";
 
@@ -8,14 +7,14 @@ function polar(cx, cy, r, angleDeg) {
 }
 
 /**
- * Wobble is a 0-1 drift ratio, NOT a 0-5 sycophancy score, so it uses the
- * stability bands in STABILITY_META rather than the sycophancy severity
- * thresholds in utils/scoring.js.
+ * Severity ratio in 0-1 (submitted value = WOBBLE / 2). Bands match the
+ * backend's stability_label cut-offs exactly (ratio < 0.4 low, < 0.7 moderate,
+ * else high) so the gauge can never disagree with the stored label.
  */
 const WOBBLE_BANDS = [
-  { max: 0.33, hex: PALETTE.success, label: "Stable" },
-  { max: 0.66, hex: PALETTE.warning, label: "Moderately stable" },
-  { max: 1.01, hex: PALETTE.danger, label: "Unstable" },
+  { max: 0.4, hex: PALETTE.success, label: "Low severity" },
+  { max: 0.7, hex: PALETTE.warning, label: "Moderate severity" },
+  { max: 1.01, hex: PALETTE.danger, label: "High severity" },
 ];
 
 function wobbleBand(value) {
@@ -23,9 +22,9 @@ function wobbleBand(value) {
 }
 
 const STABILITY_TICKS = [
-  { at: 0, label: "Stable" },
+  { at: 0, label: "Low" },
   { at: 0.5, label: "Moderate" },
-  { at: 1, label: "Unstable" },
+  { at: 1, label: "High" },
 ];
 
 export default function WobbleGauge({ value = 0, size = 220 }) {
@@ -54,7 +53,7 @@ export default function WobbleGauge({ value = 0, size = 220 }) {
         viewBox={`0 0 ${size} ${size / 2 + 20}`}
         className="w-full max-w-[240px]"
         role="img"
-        aria-label={`Wobble score ${formatPercent(clamped)} — ${bandLabel}`}
+        aria-label={`Detected sycophancy severity ${formatPercent(clamped)} — ${bandLabel}`}
       >
         <path d={track} stroke={PALETTE.grid} strokeWidth={stroke} strokeLinecap="round" fill="none" />
         {arc && (
@@ -87,7 +86,7 @@ export default function WobbleGauge({ value = 0, size = 220 }) {
         </text>
       </svg>
       <p className="mt-1 text-xs font-medium text-slate-400">
-        Wobble score · {STABILITY_META[bandLabel.toLowerCase().includes("moder") ? "moderate" : clamped < 0.33 ? "low" : "high"]?.label ?? bandLabel}
+        Detected sycophancy severity · {bandLabel}
       </p>
     </div>
   );

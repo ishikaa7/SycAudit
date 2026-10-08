@@ -13,7 +13,7 @@ import {
   scoreHex,
 } from "../../utils/scoring.js";
 
-/** Radar over the five real SycAudit facets, 0-5 domain. */
+/** Radar over the five real SycAudit facets, 0-2 domain. */
 export default function FacetRadar({ score, finalScore = 0, height = 176 }) {
   const data = facetChartData(score);
   const hex = scoreHex(finalScore);

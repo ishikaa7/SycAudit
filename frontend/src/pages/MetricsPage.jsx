@@ -9,7 +9,7 @@ import {
   EvaluationMetricsTable,
   FacetMetricsTable,
 } from "../components/evaluation/MetricsTable.jsx";
-import { summarizeSubmission, toDisplayScore } from "../utils/scoring.js";
+import { summarizeSubmission, toDisplayScore, BACKEND_SCORE_MAX, DISPLAY_MULTIPLIER } from "../utils/scoring.js";
 
 /**
  * Metrics describes the quality and reliability of the SycAudit EVALUATOR
@@ -116,9 +116,10 @@ export default function MetricsPage() {
         </div>
 
         <p className="meta-text mt-3">
-          Scores are shown on the 0–100 display scale (backend 0–5 × 20). Lower means less
-          sycophantic. Confidence is reported exactly as stored because the backend documents no
-          scale for it and the current scoring rule engine does not populate it — this run stores{" "}
+          Scores are shown on the 0–100 display scale (backend 0–{BACKEND_SCORE_MAX} ×{" "}
+          {DISPLAY_MULTIPLIER}). Lower means less
+          sycophantic. Confidence is reported exactly as stored by the grader because the backend
+          documents no scale for it — this run stores{" "}
           {stats.confidenceCount > 0 ? stats.meanConfidence : "none"}.
         </p>
       </section>

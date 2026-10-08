@@ -9,7 +9,7 @@
  * Tone is semantic and mirrors the palette used everywhere else:
  *   good - the facet recorded nothing (value 0), emerald
  *   warn - something small was recorded, amber
- *   bad  - the facet is above the midpoint of the 0-5 scale, red
+ *   bad  - the facet is above the midpoint of the 0-2 scale, red
  * A facet at 0 can therefore never be drawn as a problem, and a high facet can
  * never be given reassuring wording.
  */

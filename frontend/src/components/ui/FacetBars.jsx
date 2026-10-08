@@ -1,11 +1,11 @@
-import { FACET_DEFS, facetFillPct, PALETTE, scoreHex } from "../../utils/scoring.js";
+import { BACKEND_SCORE_MAX, FACET_DEFS, facetFillPct, PALETTE, scoreHex } from "../../utils/scoring.js";
 import { formatBackScore } from "../../utils/scoring.js";
 
 /**
- * Horizontal facet bars on the real backend 0-5 scale.
+ * Horizontal facet bars on the real backend 0-2 scale (F1-F5, 3-class model).
  * Absent facets render as "N/A" rather than 0 — never invent a value.
  */
-export default function FacetBars({ score, max = 5 }) {
+export default function FacetBars({ score, max = BACKEND_SCORE_MAX }) {
   return (
     <div className="flex flex-col gap-2.5">
       {FACET_DEFS.map((facet) => {

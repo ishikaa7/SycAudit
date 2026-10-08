@@ -52,10 +52,10 @@ const check = (name, fn) => {
 };
 
 console.log("\n-- presentation transform --");
-check("0.425 / 5 -> 8.5 / 100 (spec example)", () => {
-  assert.equal(toDisplayScore(0.425), 8.5);
-  assert.equal(formatDisplayScore(0.425), "8.5");
-  assert.equal(DISPLAY_MULTIPLIER, 20);
+check("0.425 / 2 -> 21.3 / 100 (WOBBLE 0-2 contract)", () => {
+  assert.equal(toDisplayScore(0.425), 21.3);
+  assert.equal(formatDisplayScore(0.425), "21.3");
+  assert.equal(DISPLAY_MULTIPLIER, 50);
 });
 check("no value in -> no invented value out", () => {
   assert.equal(toDisplayScore(null), null);
@@ -63,19 +63,19 @@ check("no value in -> no invented value out", () => {
   assert.equal(toDisplayScore(NaN), null);
   assert.equal(formatDisplayScore(null), "N/A");
 });
-check("5 / 5 -> 100 and 0 -> 0", () => {
-  assert.equal(toDisplayScore(5), 100);
+check("2 / 2 -> 100 and 0 -> 0", () => {
+  assert.equal(toDisplayScore(2), 100);
   assert.equal(toDisplayScore(0), 0);
 });
 
 console.log("\n-- pre-existing thresholds, not invented --");
-check("ratio < 0.4 low, < 0.7 mid, >= 0.7 high", () => {
+check("ratio < 0.4 low, < 0.7 mid, >= 0.7 high (ratio of WOBBLE/2)", () => {
   assert.equal(severityLevel(0), "low");
-  assert.equal(severityLevel(1.99), "low");
-  assert.equal(severityLevel(2), "mid"); // 0.4 exactly -> mid
-  assert.equal(severityLevel(3.49), "mid");
-  assert.equal(severityLevel(3.5), "high"); // 0.7 exactly -> high
-  assert.equal(severityLevel(5), "high");
+  assert.equal(severityLevel(0.79), "low");
+  assert.equal(severityLevel(0.8), "mid"); // 0.4 exactly -> mid
+  assert.equal(severityLevel(1.39), "mid");
+  assert.equal(severityLevel(1.4), "high"); // 0.7 exactly -> high
+  assert.equal(severityLevel(2), "high");
 });
 
 console.log("\n-- facet keys match backend rule_engine --");
@@ -248,7 +248,7 @@ check("resolved strictly from recommended_response_id", () => {
   assert.equal(rec.variantKey, "original");
   assert.equal(rec.variantDef.letter, "A");
   assert.equal(rec.finalScore, 0.425);
-  assert.equal(toDisplayScore(rec.finalScore), 8.5);
+  assert.equal(toDisplayScore(rec.finalScore), 21.3);
 });
 check("no recommendation -> null, no fallback winner invented", () => {
   assert.equal(resolveRecommended({ ...submission, report: null }), null);
@@ -272,10 +272,10 @@ check("normalized scores, variants never collapsed", () => {
   assert.deepEqual(cmp.models.map((m) => m.name), ["Qwen/Qwen3-30B-A3B"]);
   assert.deepEqual(cmp.variants.map((v) => v.key), ["original", "question"]);
   const orig = cmp.series.find((s) => s.variantKey === "original");
-  assert.equal(orig.displayScore, 8.5);
+  assert.equal(orig.displayScore, 21.3);
   assert.equal(orig.backScore, 0.425);
   const q = cmp.series.find((s) => s.variantKey === "question");
-  assert.equal(q.displayScore, 7);
+  assert.equal(q.displayScore, 17.5);
   assert.equal(q.backScore, 0.35);
 });
 check("empty submission yields empty comparison, not zeros", () => {
@@ -459,7 +459,7 @@ check("facet series is empty when nothing was scored", () => {
 check("score distribution lists only scored responses of the chosen model", () => {
   const dist = buildScoreDistribution(submission, "Qwen/Qwen3-30B-A3B");
   assert.equal(dist.length, 2);
-  assert.equal(dist[0].displayScore, 8.5);
+  assert.equal(dist[0].displayScore, 21.3);
   assert.equal(dist[0].variant, "Variant A");
   assert.deepEqual(buildScoreDistribution(submission, "gemini-2.5-pro"), []);
 });
@@ -472,8 +472,8 @@ check("overall model scores are averaged only over that model's scored responses
   assert.equal(overall[0].name, "Qwen/Qwen3-30B-A3B");
   assert.equal(overall[0].scoredCount, 2);
   assert.equal(overall[0].meanBack, (0.425 + 0.35) / 2);
-  // display scale rounds to one decimal: 0.3875 * 20 = 7.75 -> 7.7
-  assert.equal(overall[0].meanDisplay, 7.7);
+  // display scale rounds to one decimal: 0.3875 * 50 = 19.375 -> 19.4
+  assert.equal(overall[0].meanDisplay, 19.4);
   assert.equal(overall[0].rank, 1);
 });
 check("overall scores are ordered low to high with neutral rank labels", () => {
@@ -510,7 +510,7 @@ check("overall scores are ordered low to high with neutral rank labels", () => {
   const overall = buildOverallModelScores(multi);
   assert.deepEqual(overall.map((m) => m.name), ["low-model", "mid-model", "high-model"]);
   assert.deepEqual(overall.map((m) => m.rank), [1, 2, 3]);
-  assert.equal(overall[0].meanDisplay, 20);
+  assert.equal(overall[0].meanDisplay, 50);
 });
 check("no scored responses -> empty overall scores, not zeros", () => {
   assert.deepEqual(buildOverallModelScores(null), []);
@@ -621,7 +621,7 @@ check("a high preference-alignment facet is reported as recorded, not softened",
   assert.equal(insight.label, "Preference Alignment");
   assert.equal(insight.facetId, "F4");
   assert.ok(insight.text.includes("5.00"), "restates the stored maximum");
-  assert.ok(insight.text.includes("/ 5"), "keeps the backend 0-5 scale visible");
+  assert.ok(insight.text.includes("/ 2"), "keeps the backend 0-2 scale visible");
   assert.equal(
     insight.text.includes("independent judgment"),
     false,
@@ -728,19 +728,19 @@ check("identity colours never impersonate a severity colour", () => {
   roster.forEach((n) => {
     const hex = seriesColor(n, roster);
     assert.notEqual(hex, scoreHex(0), `${n} must not be drawn in the low-severity colour`);
-    assert.notEqual(hex, scoreHex(2.5), `${n} must not be drawn in the medium-severity colour`);
-    assert.notEqual(hex, scoreHex(4.5), `${n} must not be drawn in the high-severity colour`);
+    assert.notEqual(hex, scoreHex(1), `${n} must not be drawn in the medium-severity colour`);
+    assert.notEqual(hex, scoreHex(1.8), `${n} must not be drawn in the high-severity colour`);
   });
 });
 check("severity colours stay semantic green / amber / red", () => {
-  assert.equal(scoreHex(1), "#10b981");
-  assert.equal(scoreHex(2.5), "#f59e0b");
-  assert.equal(scoreHex(4.5), "#ef4444");
-  // thresholds unchanged: 0.4 / 0.7 of the backend 0-5 scale
-  assert.equal(scoreHex(1.99), "#10b981");
-  assert.equal(scoreHex(2), "#f59e0b");
-  assert.equal(scoreHex(3.49), "#f59e0b");
-  assert.equal(scoreHex(3.5), "#ef4444");
+  assert.equal(scoreHex(0.5), "#10b981");
+  assert.equal(scoreHex(1), "#f59e0b");
+  assert.equal(scoreHex(1.8), "#ef4444");
+  // thresholds unchanged: 0.4 / 0.7 of the backend 0-2 scale
+  assert.equal(scoreHex(0.79), "#10b981");
+  assert.equal(scoreHex(0.8), "#f59e0b");
+  assert.equal(scoreHex(1.39), "#f59e0b");
+  assert.equal(scoreHex(1.4), "#ef4444");
 });
 
 console.log("\n-- model identity colours --");
@@ -881,7 +881,7 @@ check("the failed model is listed with N/A, never a zero", () => {
 check("model score is the mean of that model's own variant scores", () => {
   const n = normalizeComparisonData(submission);
   const m = n.models[0];
-  // fixture: original 0.425, question 0.35 -> mean 0.3875 on the 0-5 scale
+  // fixture: original 0.425, question 0.35 -> mean 0.3875 on the 0-2 scale
   assert.equal(m.overallBack, (0.425 + 0.35) / 2);
   assert.equal(m.overallDisplay, toDisplayScore(m.overallBack));
   assert.equal(m.scoredCount, 2);
@@ -921,7 +921,7 @@ check("aggregation excludes a variant with no stored score instead of scoring it
   const m = n.models[0];
   // mean of the single scored variant = 4, NOT (4 + 0) / 2 = 2
   assert.equal(m.overallBack, 4);
-  assert.equal(m.overallDisplay, 80);
+  assert.equal(m.overallDisplay, 200);
   assert.equal(m.scoredCount, 1);
   assert.equal(m.variants.length, 2, "the unscored variant is still listed");
   assert.equal(m.variants[1].scoreBack, null, "its score stays null, not 0");

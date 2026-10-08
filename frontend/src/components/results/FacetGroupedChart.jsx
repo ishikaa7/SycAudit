@@ -14,7 +14,7 @@ import { BACKEND_SCORE_MAX, PALETTE, seriesColor } from "../../utils/scoring.js"
  * Grouped bar chart with one facet on the X axis and one bar per comparison
  * group (a prompt framing, or a model).
  *
- * Both axes are real backend values: facets stay on the backend's native 0–5
+ * Both axes are real backend values: facets stay on the backend's native 0–2
  * scale. A category with no stored value is omitted rather than drawn as a
  * zero-height bar, so "not scored" is never mistaken for "scored zero".
  *

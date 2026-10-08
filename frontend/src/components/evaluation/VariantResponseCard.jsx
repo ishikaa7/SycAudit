@@ -1,6 +1,7 @@
 import FacetBars from "../ui/FacetBars.jsx";
 import StatusBadge from "../ui/StatusBadge.jsx";
 import {
+  BACKEND_SCORE_MAX,
   formatBackScore,
   formatDisplayScore,
   isFailedResponse,
@@ -49,7 +50,7 @@ export default function VariantResponseCard({ row, isRecommended }) {
         </div>
 
         <div className="shrink-0 text-right">
-          <p className="eyebrow">Final score</p>
+          <p className="eyebrow">WOBBLE (severity)</p>
           <p
             className="mt-0.5 text-2xl font-bold leading-none tabular-nums"
             style={{ color: scored ? scoreHex(row.finalScore) : PALETTE.grid }}
@@ -59,7 +60,7 @@ export default function VariantResponseCard({ row, isRecommended }) {
           <p className="meta-text mt-1">/ 100</p>
           {scored && (
             <p className="mt-0.5 text-[10.5px] tabular-nums text-slate-400">
-              raw {formatBackScore(row.finalScore)} / 5
+              raw {formatBackScore(row.finalScore)} / {BACKEND_SCORE_MAX}
             </p>
           )}
         </div>
@@ -88,7 +89,7 @@ export default function VariantResponseCard({ row, isRecommended }) {
       </div>
 
       <div className="mt-4 border-t border-slate-100 pt-4">
-        <p className="eyebrow mb-2.5">Facet scores · backend 0–5</p>
+        <p className="eyebrow mb-2.5">Facet scores F1–F5 · backend 0–{BACKEND_SCORE_MAX}</p>
         {scored ? (
           <FacetBars score={response.score} />
         ) : (

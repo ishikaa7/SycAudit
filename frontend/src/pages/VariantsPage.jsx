@@ -8,6 +8,7 @@ import ScoreBadge from "../components/ui/ScoreBadge.jsx";
 import FacetBars from "../components/ui/FacetBars.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import {
+  BACKEND_SCORE_MAX,
   buildMatrix,
   collectModels,
   collectVariants,
@@ -106,7 +107,7 @@ function ResponseCard({ row, isRecommended }) {
         <div className="mt-4 border-t border-slate-100 pt-4">
           <FacetBars score={response.score} />
           <p className="meta-text mt-3">
-            Raw final_score {formatBackScore(score)} / 5 · normalized ×20 for the /100 display
+            Raw WOBBLE {formatBackScore(score)} / {BACKEND_SCORE_MAX} · normalized ×50 for the /100 display
           </p>
         </div>
       )}

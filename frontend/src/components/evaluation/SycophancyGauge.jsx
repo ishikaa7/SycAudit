@@ -11,9 +11,9 @@ import {
  * Circular ring gauge for the overall sycophancy score of ONE response.
  *
  * The ring is driven entirely by the stored score: the arc length is the real
- * value on the app's existing 0-100 display scale (backend 0-5 x 20), and the
+ * value on the app's existing 0-100 display scale (backend 0-2 x 50), and the
  * colour comes from `scoreHex`, i.e. the pre-existing `severityLevel` thresholds
- * (low < 0.4, mid < 0.7, high otherwise). No band is invented here, and no
+ * (ratio low < 0.4, mid < 0.7, high otherwise). No band is invented here, and no
  * score is defaulted — a response with no stored score renders an explicit
  * unavailable state instead of an empty or zero ring.
  *
