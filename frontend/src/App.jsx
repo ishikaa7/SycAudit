@@ -1,45 +1,86 @@
 ﻿import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+
 import AppLayout from "./components/layout/AppLayout.jsx";
 import SubmissionLayout from "./components/layout/SubmissionLayout.jsx";
 import ActiveSubmissionRoute from "./components/layout/ActiveSubmissionRoute.jsx";
 import AuthGuard from "./components/ProtectedRoute.jsx";
+
 import LoginPage from "./pages/LoginPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import Spinner from "./components/ui/Spinner.jsx";
 
-const SubmissionDetailsPage = lazy(() => import("./pages/SubmissionDetailsPage.jsx"));
+// Submission / analysis pages
+const SubmissionDetailsPage = lazy(
+  () => import("./pages/SubmissionDetailsPage.jsx")
+);
 const VariantsPage = lazy(() => import("./pages/VariantsPage.jsx"));
-const AnalysisPage = lazy(() => import("./pages/AnalysisPage.jsx"));
-const MetricsPage = lazy(() => import("./pages/MetricsPage.jsx"));
 const ComparisonPage = lazy(() => import("./pages/ComparisonPage.jsx"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage.jsx"));
-          <Route path="/response-comparison" element={withLoader(<ResponseComparisonPage />)} />
-const AdminPage = lazy(() => import("./pages/AdminPage.jsx"));
+const MetricsPage = lazy(() => import("./pages/MetricsPage.jsx"));
 const BenchmarksPage = lazy(() => import("./pages/BenchmarksPage.jsx"));
-const ResponseComparisonPage = lazy(() => import("./pages/ResponseComparisonPage.jsx"));
+          <Route
+            path="/response-comparison"
+            element={<ActiveSubmissionRoute segment="response-comparison" eyebrow="Response Analysis" title="Response Analysis" subtitle="Analyze individual responses." icon="chart" />}
+          />
+const AdminPage = lazy(() => import("./pages/AdminPage.jsx"));
+
+// IMPORTANT:
+// ResponseComparisonPage is now the individual Response Analysis page.
+// It receives the real submission from SubmissionLayout.
+const ResponseComparisonPage = lazy(
+  () => import("./pages/ResponseComparisonPage.jsx")
+);
 
 function PageLoader() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center gap-2.5 text-sm text-slate-400">
       <Spinner className="h-4 w-4 text-indigo-700" />
-      Loadingâ€¦
+      Loading…
     </div>
   );
 }
 
-const withLoader = (element) => <Suspense fallback={<PageLoader />}>{element}</Suspense>;
+const withLoader = (element) => (
+  <Suspense fallback={<PageLoader />}>
+    {element}
+  </Suspense>
+);
 
 export default function App() {
   return (
     <Routes>
+      {/* =========================================================
+          PUBLIC ROUTES
+      ========================================================= */}
+
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 
+      {/* =========================================================
+          AUTHENTICATED APPLICATION
+      ========================================================= */}
+
       <Route element={<AuthGuard />}>
         <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
+
+          {/* =====================================================
+              DASHBOARD
+          ===================================================== */}
+
+          <Route
+            path="/dashboard"
+            element={<DashboardPage />}
+          />
+
+          {/* =====================================================
+              ACTIVE SUBMISSION SHORTCUT ROUTES
+
+              These routes work with whichever submission is
+              currently active.
+          ===================================================== */}
+
           <Route
             path="/results"
             element={
@@ -52,6 +93,7 @@ export default function App() {
               />
             }
           />
+
           <Route
             path="/comparison"
             element={
@@ -63,6 +105,7 @@ export default function App() {
               />
             }
           />
+
           <Route
             path="/metrics"
             element={
@@ -75,43 +118,132 @@ export default function App() {
               />
             }
           />
+
+          {/* =====================================================
+              HISTORY
+          ===================================================== */}
+
           <Route
-            path="/analysis"
-            element={
-              <ActiveSubmissionRoute
-                segment="analysis"
-                eyebrow="Sycophancy analysis"
-                title="Sycophancy Analysis"
-                subtitle="Detailed analysis of model behaviour for the active analysis."
-                icon="search"
-              />
-            }
+            path="/history"
+            element={withLoader(<HistoryPage />)}
           />
-          <Route path="/history" element={withLoader(<HistoryPage />)} />
-          <Route path="/benchmarks" element={withLoader(<BenchmarksPage />)} />
+
+          {/* =====================================================
+              BENCHMARKS
+          ===================================================== */}
+
+          <Route
+            path="/benchmarks"
+            element={withLoader(<BenchmarksPage />)}
+          />
+
+          {/* =====================================================
+              SUBMISSION-SPECIFIC ROUTES
+
+              IMPORTANT:
+              Everything inside SubmissionLayout receives the
+              actual submission through useSubmissionContext().
+          ===================================================== */}
 
           <Route element={<SubmissionLayout />}>
-            <Route path="/submissions/:id" element={withLoader(<SubmissionDetailsPage />)} />
-            <Route path="/submissions/:id/variants" element={withLoader(<VariantsPage />)} />
-            <Route path="/submissions/:id/analysis" element={withLoader(<AnalysisPage />)} />
-            <Route path="/submissions/:id/metrics" element={withLoader(<MetricsPage />)} />
-            <Route path="/submissions/:id/comparison" element={withLoader(<ComparisonPage />)} />
+
+            {/* ---------------------------------------------------
+                SUBMISSION RESULTS
+                /submissions/:id
+            --------------------------------------------------- */}
+
+            <Route
+              path="/submissions/:id"
+              element={withLoader(<SubmissionDetailsPage />)}
+            />
+
+            {/* ---------------------------------------------------
+                PROMPT VARIANTS
+                /submissions/:id/variants
+            --------------------------------------------------- */}
+
+            <Route
+              path="/submissions/:id/variants"
+              element={withLoader(<VariantsPage />)}
+            />
+
+            {/* ---------------------------------------------------
+                RESPONSE ANALYSIS
+                /submissions/:id/analysis
+
+                This is now the page with:
+
+                Response A / B / C selector
+                ↓
+                Selected response
+                ↓
+                Real F1–F5
+                ↓
+                WOBBLE
+                ↓
+                Severity
+                ↓
+                Rank
+            --------------------------------------------------- */}
+
+            <Route
+              path="/submissions/:id/analysis"
+              element={withLoader(<ResponseComparisonPage />)}
+            />
+
+            {/* ---------------------------------------------------
+                MODEL COMPARISON
+                /submissions/:id/comparison
+
+                This is the separate page for comparing multiple
+                models/responses side-by-side.
+            --------------------------------------------------- */}
+
+            <Route
+              path="/submissions/:id/comparison"
+              element={withLoader(<ComparisonPage />)}
+            />
+
+            {/* ---------------------------------------------------
+                METRICS
+                /submissions/:id/metrics
+            --------------------------------------------------- */}
+
+            <Route
+              path="/submissions/:id/metrics"
+              element={withLoader(<MetricsPage />)}
+            />
           </Route>
         </Route>
       </Route>
 
+      {/* =========================================================
+          ADMIN / REVIEWER
+      ========================================================= */}
+
       <Route element={<AuthGuard allowRoles={["admin", "reviewer"]} />}>
         <Route element={<AppLayout />}>
-          <Route path="/admin" element={withLoader(<AdminPage />)} />
+          <Route
+            path="/admin"
+            element={withLoader(<AdminPage />)}
+          />
         </Route>
       </Route>
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* =========================================================
+          DEFAULT ROUTES
+      ========================================================= */}
+
+      <Route
+        path="/"
+        element={<Navigate to="/dashboard" replace />}
+      />
+
+      <Route
+        path="*"
+        element={<Navigate to="/dashboard" replace />}
+      />
     </Routes>
   );
 }
-
-
-
 

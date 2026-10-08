@@ -3,8 +3,7 @@
   { to: "/results", label: "Results", icon: "check" },
   { to: "/comparison", label: "Model Comparison", icon: "chart" },
   { to: "/metrics", label: "Metrics", icon: "gauge" },
-  { to: "/analysis", label: "Sycophancy Analysis", icon: "search" },
-  { to: "/comparison", label: "Response Comparison", icon: "chart" },
+  { to: "/analysis", label: "Response Analysis", icon: "search" },
   { to: "/benchmarks", label: "Benchmarks", icon: "flag" },
   { to: "/history", label: "History", icon: "clock" },
 ];
@@ -85,3 +84,5 @@ export function NavIcon({ name, className = "h-4 w-4" }) {
 }
 
 export default NAV;
+
+

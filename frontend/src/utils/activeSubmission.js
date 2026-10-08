@@ -1,5 +1,5 @@
-/**
- * ACTIVE SUBMISSION — one rule, used by the sidebar and the top-level routes.
+﻿/**
+ * ACTIVE SUBMISSION â€” one rule, used by the sidebar and the top-level routes.
  *
  * The application has a single active submission:
  *
@@ -95,7 +95,7 @@ export function latestCompletedSubmission(items) {
   );
 }
 
-/** Completed runs, newest first — the single list History is allowed to show. */
+/** Completed runs, newest first â€” the single list History is allowed to show. */
 export function completedSubmissionsNewestFirst(items) {
   if (!Array.isArray(items)) return [];
   return items

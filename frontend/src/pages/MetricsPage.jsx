@@ -1,171 +1,154 @@
+import { useMemo } from "react";
+
 import { useSubmissionContext } from "../components/layout/SubmissionLayout.jsx";
 import SubmissionHeader from "../components/results/SubmissionHeader.jsx";
 import PageHeader from "../components/ui/PageHeader.jsx";
 import Notice from "../components/ui/Notice.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
-import DisagreementChart from "../components/evaluation/DisagreementChart.jsx";
-import {
-  EVALUATION_METRIC_COLUMNS,
-  EvaluationMetricsTable,
-  FacetMetricsTable,
-} from "../components/evaluation/MetricsTable.jsx";
-import { summarizeSubmission, toDisplayScore, BACKEND_SCORE_MAX, DISPLAY_MULTIPLIER } from "../utils/scoring.js";
 
-/**
- * Metrics describes the quality and reliability of the SycAudit EVALUATOR
- * itself. It is not a model comparison and not a result summary — comparing
- * models across variants is Model Comparison's job.
- *
- * Backend gap, stated plainly: the API stores model-generated scores only. It
- * exposes no human gold labels, no evaluator-performance figures (exact
- * agreement, Cohen's kappa, precision, recall, F1) and no per-facet
- * disagreement tallies. Every such cell below therefore renders "Not
- * available". The structure is preserved so it can be filled in if such data is
- * ever added, and nothing is estimated to fill a gap.
- */
+import {
+  BACKEND_SCORE_MAX,
+  FACET_DEFS,
+  buildMatrix,
+} from "../utils/scoring.js";
+
 export default function MetricsPage() {
   const { submission } = useSubmissionContext();
-  const stats = summarizeSubmission(submission);
+
+  const rows = useMemo(
+    () => buildMatrix(submission),
+    [submission]
+  );
+
+  if (!submission) {
+    return (
+      <div className="animate-fade-up">
+        <PageHeader
+          eyebrow="Facet analysis"
+          title="Facet Scores"
+          subtitle="Real SycAudit facet scores for this evaluation."
+        />
+
+        <Notice tone="warning" title="No submission loaded">
+          Select an evaluation from History.
+        </Notice>
+      </div>
+    );
+  }
+
+  const scoredRows = rows.filter(
+    (row) =>
+      row.scored &&
+      row.score &&
+      row.finalScore !== null
+  );
 
   return (
     <div className="animate-fade-up">
       <PageHeader
-        eyebrow="Metrics & evaluation"
-        title="Metrics"
-        subtitle="How well the SycAudit evaluator itself performs, against human reference labels."
+        eyebrow="Facet analysis"
+        title="Facet Scores"
+        subtitle="Real SycAudit facet scores returned for this evaluation."
       />
 
       <SubmissionHeader submission={submission} />
 
-      <div className="mb-6">
-        <Notice tone="warning" title="No human reference data is available from the API">
-          The backend stores model-generated scores only. It returns no human gold annotations and
-          no evaluator-performance endpoint, so exact agreement, Cohen&apos;s kappa, precision,
-          recall, F1, per-facet positive counts and disagreement tallies all have no source in this
-          response payload. They are shown as <span className="font-semibold">Not available</span>{" "}
-          rather than estimated.
-        </Notice>
-      </div>
-
-      {/* What the run actually contains — real observed numbers */}
-      <section className="mb-8">
-        <div className="mb-3">
-          <h2 className="section-title">Observed in this run</h2>
-          <p className="section-sub">
-            Counts derived from the scores this submission stored. These are real values, kept
-            separate from evaluator-quality metrics above and below.
-          </p>
+      {scoredRows.length === 0 ? (
+        <div className="mt-6">
+          <EmptyState
+            icon="alert"
+            title="No facet scores available"
+            subtitle="This submission does not contain stored facet scores."
+          />
         </div>
+      ) : (
+        <section className="mt-6">
+          <div className="mb-4">
+            <h2 className="section-title">
+              SycAudit Facets
+            </h2>
 
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {[
-            { label: "Responses Stored", value: stats.responseCount, hint: "In this payload" },
-            { label: "Responses Scored", value: stats.scoredCount, hint: "Carrying a score" },
-            { label: "Models Compared", value: stats.modelCount, hint: "Distinct models" },
-            { label: "Variants Generated", value: stats.variantCount, hint: "Prompt framings" },
-            { label: "Failed Calls", value: stats.failedCount, hint: "Recorded as failed" },
-          ].map((t) => (
-            <div key={t.label} className="card p-4">
-              <p className="text-[12.5px] font-semibold text-slate-600">{t.label}</p>
-              <p className="mt-2 text-[26px] font-bold leading-none tabular-nums text-slate-900">
-                {t.value}
-              </p>
-              <p className="meta-text mt-2">{t.hint}</p>
-            </div>
-          ))}
-        </div>
+            <p className="section-sub">
+              Backend scale: 0–{BACKEND_SCORE_MAX}.
+            </p>
+          </div>
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            {
-              label: "Mean Score",
-              back: stats.meanScore,
-              hint: `Mean of ${stats.scoredCount} stored score${stats.scoredCount === 1 ? "" : "s"}`,
-            },
-            {
-              label: "Lowest Observed",
-              back: stats.minScore,
-              hint: "Lowest stored score in this run",
-            },
-            {
-              label: "Highest Observed",
-              back: stats.maxScore,
-              hint: "Highest stored score in this run",
-            },
-            {
-              label: "Score Spread",
-              back: stats.scoreRange,
-              hint: "Highest minus lowest",
-            },
-          ].map((t) => {
-            const v = toDisplayScore(t.back);
-            return (
-              <div key={t.label} className="card p-4">
-                <p className="text-[12.5px] font-semibold text-slate-600">{t.label}</p>
-                <p
-                  className={`mt-2 text-[26px] font-bold leading-none tabular-nums ${
-                    v === null ? "text-slate-300" : "text-slate-900"
-                  }`}
+          <div className="space-y-4">
+            {scoredRows.map((row, index) => {
+              const facets =
+                row.score?.facet_scores || {};
+
+              return (
+                <article
+                  key={
+                    row.response?.response_id ||
+                    `${row.modelName}-${index}`
+                  }
+                  className="card overflow-hidden"
                 >
-                  {v === null ? "N/A" : v.toFixed(1)}
-                </p>
-                <p className="meta-text mt-2">{t.hint}</p>
-              </div>
-            );
-          })}
-        </div>
+                  <div className="border-b border-slate-100 bg-surface-50 px-5 py-4">
+                    <p className="text-[14px] font-semibold text-slate-900">
+                      {row.modelName || `Response ${index + 1}`}
+                    </p>
 
-        <p className="meta-text mt-3">
-          Scores are shown on the 0–100 display scale (backend 0–{BACKEND_SCORE_MAX} ×{" "}
-          {DISPLAY_MULTIPLIER}). Lower means less
-          sycophantic. Confidence is reported exactly as stored by the grader because the backend
-          documents no scale for it — this run stores{" "}
-          {stats.confidenceCount > 0 ? stats.meanConfidence : "none"}.
-        </p>
-      </section>
+                    <p className="mt-1 text-[12px] text-slate-500">
+                      {row.variantDef?.label ||
+                        row.variantLabel ||
+                        row.variantKey ||
+                        "Unknown variant"}
+                    </p>
+                  </div>
 
-      {/* Evaluation metrics */}
-      <section className="mb-6">
-        <div className="mb-3">
-          <h2 className="section-title">Evaluation metrics</h2>
-          <p className="section-sub">
-            SycAudit scorer versus human gold labels, for this submission.
-          </p>
-        </div>
-        <EvaluationMetricsTable metrics={[]} />
-        <p className="meta-text mt-2">
-          Columns kept in place: {EVALUATION_METRIC_COLUMNS.map((c) => c.label).join(", ")}.
-        </p>
-      </section>
+                  <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-5">
+                    {FACET_DEFS.map((facet) => {
+                      const value = facets[facet.key];
 
-      {/* Facet-wise performance */}
-      <section className="mb-6">
-        <div className="mb-3">
-          <h2 className="section-title">Facet-wise performance</h2>
-          <p className="section-sub">
-            Per-facet agreement between the model scorer and human judgement.
-          </p>
-        </div>
-        <FacetMetricsTable metrics={[]} />
-      </section>
+                      const valid =
+                        typeof value === "number" &&
+                        Number.isFinite(value);
 
-      {/* Disagreement analysis */}
-      <section className="mb-6">
-        <div className="mb-3">
-          <h2 className="section-title">Disagreement analysis</h2>
-          <p className="section-sub">
-            Per facet, where the model scorer diverges from the human judgement.
-          </p>
-        </div>
-        <DisagreementChart rows={[]} />
-      </section>
+                      return (
+                        <div
+                          key={facet.key}
+                          className="rounded-xl border border-slate-200 p-4"
+                        >
+                          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                            {facet.id}
+                          </p>
 
-      <EmptyState
-        compact
-        icon="alert"
-        title="No evaluator-reliability chart is shown"
-        subtitle="Reliability curves and score distributions would require a human-reference label set. Rather than draw an invented distribution, this section stays empty until the API exposes gold annotations."
-      />
+                          <h3 className="mt-1 text-[13px] font-semibold text-slate-900">
+                            {facet.label}
+                          </h3>
+
+                          <p className="mt-3 text-[22px] font-bold tabular-nums text-slate-900">
+                            {valid ? value : "N/A"}
+
+                            <span className="text-[11px] font-normal text-slate-400">
+                              {" "}
+                              / {BACKEND_SCORE_MAX}
+                            </span>
+                          </p>
+
+                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                            <div
+                              className="h-full rounded-full bg-indigo-600"
+                              style={{
+                                width: valid
+                                  ? `${(value / BACKEND_SCORE_MAX) * 100}%`
+                                  : "0%",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
