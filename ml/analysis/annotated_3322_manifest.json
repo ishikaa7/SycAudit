@@ -57,31 +57,29 @@
     },
     {
       "batch": "batch04",
-      "file_sha256": "21dc30b60e785c4808decc7e6f06cab66e6d0aba1f087cf5c2e7b6b8879a259a",
+      "file_sha256": "7ffdfb6a76f314c651db9e8a5a1fe7e4f6e8b7e89dd884835fd73c3c53492e17",
       "format": "jsonl",
       "invalid": 0,
-      "lines_loaded": 811,
+      "lines_loaded": 1810,
       "path": "dataset/combined/ollama_annotation/batch_04/annotations.jsonl",
-      "recovered_from_nul_padding": [
-        82
-      ],
-      "skipped_blank_or_nonpayload": 0,
-      "valid": 811
+      "recovered_from_nul_padding": [],
+      "skipped_blank_or_nonpayload": 1,
+      "valid": 1810
     }
   ],
   "annotation_counts_by_artifact": {
     "batch01": 50,
     "batch02": 50,
     "batch03": 1000,
-    "batch04": 811,
+    "batch04": 1810,
     "human": 50,
     "production": 1362
   },
   "bge_alignment_status": true,
   "canonicalization_statistics": {
-    "mapped": 3323,
+    "mapped": 4322,
     "record_id_differs_from_parent_id": 500,
-    "record_id_matches_parent_id": 2823,
+    "record_id_matches_parent_id": 3822,
     "unmapped": []
   },
   "canonicalization_used_parent_id_count": 1362,
@@ -125,32 +123,29 @@
     }
   ],
   "feature_alignment_status": true,
-  "generated_utc": "2026-10-04T11:22:42+00:00",
+  "generated_utc": "2026-10-05T17:45:02+00:00",
   "invalid_statistics": {
     "invalid_annotation_rows": 0,
-    "non_payload_non_json_lines": [],
-    "recovered_from_nul_padding": [
-      {
-        "batch": "batch04",
-        "line_no": 82
-      }
-    ]
+    "non_payload_non_json_lines": [
+      82
+    ],
+    "recovered_from_nul_padding": []
   },
   "outputs": {
     "annotated_3322_csv": "ml/analysis/annotated_3322.csv",
-    "annotated_3322_csv_sha256": "4eb76dc66f09021a07e85b2e3e493078052620e46007eabba8b24d41c51e76f9"
+    "annotated_3322_csv_sha256": "de6be6dda5b6b21aa7e86066c390a6f4347b4a2fd933a04b55e67587366a8142"
   },
   "parent_dataset": {
     "path": "dataset/combined/combined_evaluator_dataset.csv",
     "rows": 5100,
     "sha256": "c48c87baadb545f57187b5c4e861f9f943afab8048f99f6c5df01a2ea9378d8c"
   },
-  "repository_head": "183880c5781dd4dfe3de421d5de76607c6ac296b",
+  "repository_head": "b9442d960327fa89f0ccb5a6820010b0d368fa3a",
   "repository_root_posix": ".",
   "row_identity": {
-    "annotated_ids_mapped_to_embeddings": 3323,
-    "annotated_ids_total": 3323,
-    "canonical_id_order_digest_sha256": "6513f5e9abc472d34b3d1bbe91cf1ef4381f0c2ae00f60626732d042b15e7ed4",
+    "annotated_ids_mapped_to_embeddings": 4322,
+    "annotated_ids_total": 4322,
+    "canonical_id_order_digest_sha256": "2c18d05f070670766a852140cfdaf390d344dfd604659522cc05f68c43ab54a9",
     "parent_id_set_in_embeddings": 5100
   },
   "rubric": {
@@ -158,5 +153,5 @@
     "path": "dataset/combined/SYCAUDIT_ANNOTATION_GUIDELINES_v2.0.1.md"
   },
   "script_version": "1.0.0",
-  "total_annotated_rows": 3323
+  "total_annotated_rows": 4322
 }

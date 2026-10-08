@@ -24,6 +24,12 @@ ANNOTATED_CSV = "ml/analysis/annotated_3322.csv"
 SPLIT_CSV = "ml/splits/split_assignments.csv"
 PARENT_CSV = "dataset/combined/combined_evaluator_dataset.csv"
 TARGET_COLS = [f"target_{f}" for f in FACETS]
+VALID_SPLIT_NAMES = ("train", "validation", "test")
+
+# Historical V1 split shape, retained only as provenance for the already-frozen V1 run
+# artifacts.  It is deliberately NOT used as a validation gate: the dataset size and the
+# per-split row counts are now derived from canonical-ID coverage between the dataset and
+# the supplied split assignment, so the same loader serves V1 and V2 without special cases.
 EXPECTED_SPLIT_COUNTS = {"train": 2345, "validation": 489, "test": 489}
 
 
@@ -45,6 +51,14 @@ class AlignmentReport:
     feature_dtype: str = ""
     feature_dim: int = 0
     targets_valid: bool = False
+    annotated_csv: str = ""
+    split_csv: str = ""
+    duplicate_annotated_ids: int = 0
+    duplicate_split_ids: int = 0
+    missing_from_split: int = 0
+    extra_in_split: int = 0
+    invalid_split_names: list[str] = field(default_factory=list)
+    id_coverage_match: bool = False
     errors: list[str] = field(default_factory=list)
 
     @property
@@ -54,6 +68,8 @@ class AlignmentReport:
     def to_dict(self) -> dict:
         d = {
             "ok": self.ok,
+            "annotated_csv": self.annotated_csv,
+            "split_csv": self.split_csv,
             "annotated_rows": self.annotated_rows,
             "split_rows": self.split_rows,
             "feature_rows": self.feature_rows,
@@ -61,6 +77,12 @@ class AlignmentReport:
             "validation_count": self.validation_count,
             "test_count": self.test_count,
             "mapped_unique": self.mapped_unique,
+            "duplicate_annotated_ids": self.duplicate_annotated_ids,
+            "duplicate_split_ids": self.duplicate_split_ids,
+            "missing_from_split": self.missing_from_split,
+            "extra_in_split": self.extra_in_split,
+            "invalid_split_names": list(self.invalid_split_names),
+            "id_coverage_match": self.id_coverage_match,
             "feature_nan": self.feature_nan,
             "feature_inf": self.feature_inf,
             "feature_dtype": self.feature_dtype,
@@ -70,6 +92,95 @@ class AlignmentReport:
         if self.errors:
             d["errors"] = list(self.errors)
         return d
+
+
+def validate_dataset_split(
+    annotated: pd.DataFrame, splits: pd.DataFrame
+) -> tuple[dict[str, int], list[str], dict]:
+    """Validate dataset <-> split consistency purely by canonical_id.
+
+    Returns ``(per_split_counts, errors, detail)``.
+
+    The dataset size is intentionally DERIVED from canonical-ID coverage rather than
+    asserted against the historical V1 row count (3323), so the same loader serves the
+    3323-row V1 split and the 4322-row V2 split with no size-specific branches.  Nothing
+    about grouping, targets, features, or split semantics is inspected here.
+    """
+    errors: list[str] = []
+    detail: dict = {}
+
+    for frame, label in ((annotated, "annotated dataset"), (splits, "split assignment")):
+        if "canonical_id" not in frame.columns:
+            errors.append(f"{label} is missing the canonical_id column.")
+    if errors:
+        return {}, errors, detail
+
+    for frame, label in ((annotated, "annotated dataset"), (splits, "split assignment")):
+        n_null = int(frame["canonical_id"].isna().sum())
+        if n_null:
+            errors.append(f"{label} contains {n_null} null canonical_id value(s).")
+    if errors:
+        return {}, errors, detail
+
+    ann_ids = annotated["canonical_id"].astype(str)
+    split_ids = splits["canonical_id"].astype(str)
+
+    dup_ann = int(len(ann_ids) - ann_ids.nunique())
+    dup_split = int(len(split_ids) - split_ids.nunique())
+    detail["duplicate_annotated_ids"] = dup_ann
+    detail["duplicate_split_ids"] = dup_split
+    if dup_ann:
+        errors.append(
+            f"annotated dataset has {dup_ann} duplicate canonical_id value(s); "
+            "every dataset row must have a unique canonical_id."
+        )
+    if dup_split:
+        errors.append(
+            f"split assignment has {dup_split} duplicate canonical_id value(s); "
+            "every canonical_id must appear exactly once in the split."
+        )
+
+    ann_set = set(ann_ids)
+    split_set = set(split_ids)
+    missing = sorted(ann_set - split_set)  # dataset rows with no split assignment
+    extra = sorted(split_set - ann_set)  # split rows with no dataset row
+    detail["missing_from_split"] = missing
+    detail["extra_in_split"] = extra
+    if missing:
+        errors.append(
+            f"{len(missing)} dataset canonical_id(s) have no split assignment "
+            f"(first few: {missing[:5]})."
+        )
+    if extra:
+        errors.append(
+            f"{len(extra)} split canonical_id(s) have no matching dataset row "
+            f"(first few: {extra[:5]})."
+        )
+
+    detail["id_coverage_match"] = not missing and not extra and not dup_ann and not dup_split
+    if detail["id_coverage_match"]:
+        detail["mapped_unique"] = len(ann_set)
+
+    if "split" not in splits.columns:
+        errors.append("split assignment is missing the split column.")
+        return {}, errors, detail
+    n_null_split = int(splits["split"].isna().sum())
+    if n_null_split:
+        errors.append(f"split assignment contains {n_null_split} null split value(s).")
+        return {}, errors, detail
+
+    names = splits["split"].astype(str)
+    invalid = sorted(set(names.unique()) - set(VALID_SPLIT_NAMES))
+    detail["invalid_split_names"] = invalid
+    if invalid:
+        errors.append(
+            f"split assignment contains invalid split name(s) {invalid}; "
+            f"allowed values are {list(VALID_SPLIT_NAMES)}."
+        )
+
+    counts = {str(k): int(v) for k, v in names.value_counts().to_dict().items()}
+    detail["split_counts"] = counts
+    return counts, errors, detail
 
 
 def repo_root() -> Path:
@@ -139,39 +250,42 @@ def load_feature_matrix(root: Path, feature_name: str) -> tuple[np.ndarray, list
     return x, row_ids
 
 
-def preflight_alignment(root: Path, x: np.ndarray, feature_name: str) -> AlignmentReport:
+def preflight_alignment(
+    root: Path,
+    x: np.ndarray,
+    feature_name: str,
+    annotated_csv: str = ANNOTATED_CSV,
+    split_csv: str = SPLIT_CSV,
+) -> AlignmentReport:
     """Run every explicit alignment / safety check and return a report."""
     report = AlignmentReport()
+    report.annotated_csv = annotated_csv
+    report.split_csv = split_csv
 
-    annotated = pd.read_csv(root / ANNOTATED_CSV, encoding="utf-8-sig")
-    splits = pd.read_csv(root / SPLIT_CSV, encoding="utf-8-sig")
+    annotated = pd.read_csv(root / annotated_csv, encoding="utf-8-sig")
+    splits = pd.read_csv(root / split_csv, encoding="utf-8-sig")
 
     report.annotated_rows = int(len(annotated))
     report.split_rows = int(len(splits))
-    if report.annotated_rows != 3323:
-        report.errors.append(f"annotated dataset rows={report.annotated_rows} != 3323.")
-    if report.split_rows != 3323:
-        report.errors.append(f"split assignment rows={report.split_rows} != 3323.")
 
-    counts = splits["split"].value_counts().to_dict()
+    # Dataset/split consistency is derived from canonical-ID coverage, not from a fixed
+    # row count, so V1 (3323 rows) and V2 (4322 rows) both validate through this path.
+    counts, id_errors, detail = validate_dataset_split(annotated, splits)
+    report.errors.extend(id_errors)
+    report.duplicate_annotated_ids = int(detail.get("duplicate_annotated_ids", 0))
+    report.duplicate_split_ids = int(detail.get("duplicate_split_ids", 0))
+    report.missing_from_split = len(detail.get("missing_from_split", []) or [])
+    report.extra_in_split = len(detail.get("extra_in_split", []) or [])
+    report.invalid_split_names = list(detail.get("invalid_split_names", []) or [])
+    report.id_coverage_match = bool(detail.get("id_coverage_match", False))
+
     report.train_count = int(counts.get("train", 0))
     report.validation_count = int(counts.get("validation", 0))
     report.test_count = int(counts.get("test", 0))
-    for split_name, expected in EXPECTED_SPLIT_COUNTS.items():
-        if counts.get(split_name, 0) != expected:
-            report.errors.append(
-                f"split {split_name} has {counts.get(split_name, 0)} rows, expected {expected}."
-            )
+    if report.id_coverage_match:
+        report.mapped_unique = int(detail.get("mapped_unique", 0))
 
     ann_ids = set(annotated["canonical_id"].astype(str))
-    split_ids = set(splits["canonical_id"].astype(str))
-    if ann_ids == split_ids and len(ann_ids) == report.annotated_rows:
-        report.mapped_unique = len(ann_ids)
-    else:
-        report.errors.append(
-            f"canonical_id sets differ between annotation frame and split "
-            f"(annotated unique={len(ann_ids)}, split unique={len(split_ids)})."
-        )
 
     parent = pd.read_csv(root / PARENT_CSV, encoding="utf-8-sig")
     parent_ids = [str(v) for v in parent["id"].tolist()]
@@ -274,33 +388,65 @@ def build_datasets(
     root: Path,
     feature_name: str,
     use_test: bool = False,
+    annotated_csv: str = ANNOTATED_CSV,
+    split_csv: str = SPLIT_CSV,
 ) -> tuple[dict[str, SycAuditDataset], AlignmentReport]:
-    """Align + slice the frozen feature matrix into train/validation(/test)."""
+    """Align + slice the frozen feature matrix into train/validation(/test).
+
+    ``annotated_csv`` / ``split_csv`` default to the frozen V1 pair, so existing callers
+    behave exactly as before; pass the V2 split to load Dataset V2.  Per-split expected
+    counts are derived from the split assignment itself rather than hardcoded.
+    """
     x, _ = load_feature_matrix(root, feature_name)
 
-    report = preflight_alignment(root, x=x, feature_name=feature_name)
+    report = preflight_alignment(
+        root,
+        x=x,
+        feature_name=feature_name,
+        annotated_csv=annotated_csv,
+        split_csv=split_csv,
+    )
     if not report.ok:
         raise AlignmentError("Preflight alignment failed:\n  " + "\n  ".join(report.errors))
 
-    annotated = pd.read_csv(root / ANNOTATED_CSV, encoding="utf-8-sig")
-    splits = pd.read_csv(root / SPLIT_CSV, encoding="utf-8-sig")
+    annotated = pd.read_csv(root / annotated_csv, encoding="utf-8-sig")
+    splits = pd.read_csv(root / split_csv, encoding="utf-8-sig")
+
+    expected_counts, errors, _ = validate_dataset_split(annotated, splits)
+    if errors:
+        raise AlignmentError(
+            "Dataset/split validation failed:\n  " + "\n  ".join(errors)
+        )
 
     idxs = mapping_indexes(root, annotated)
-    split_of = dict(zip(splits["canonical_id"].astype(str), splits["split"]))
-    assigned = np.asarray([split_of[cid] for cid in annotated["canonical_id"].astype(str)])
+    split_of = dict(zip(splits["canonical_id"].astype(str), splits["split"].astype(str)))
+    assigned = np.asarray(
+        [split_of[cid] for cid in annotated["canonical_id"].astype(str)]
+    )
 
     desired = {"train", "validation"} | ({"test"} if use_test else set())
     datasets: dict[str, SycAuditDataset] = {}
     for split_name in sorted(desired):
         mask = assigned == split_name
         actual = int(mask.sum())
-        expected = EXPECTED_SPLIT_COUNTS[split_name]
+        expected = int(expected_counts.get(split_name, 0))
+        if expected <= 0:
+            raise AlignmentError(
+                f"Split {split_name!r} contains no rows in {split_csv}."
+            )
         if actual != expected:
             raise AlignmentError(
-                f"Split {split_name} selected {actual} rows, expected {expected}."
+                f"Split {split_name} selected {actual} rows, expected {expected} "
+                f"as derived from {split_csv}."
             )
         x_sub = np.asarray(x[idxs[mask]])
         y_sub = annotated.loc[mask, TARGET_COLS].to_numpy(dtype=np.int64)
+        # Features and targets must stay aligned by canonical_id after slicing.
+        if len(x_sub) != len(y_sub):
+            raise AlignmentError(
+                f"Split {split_name} feature/target misalignment after slicing: "
+                f"{len(x_sub)} feature rows vs {len(y_sub)} target rows."
+            )
         datasets[split_name] = SycAuditDataset(x_sub, y_sub)
     return datasets, report
 
