@@ -1,0 +1,132 @@
+{
+  "generated_utc": "2026-10-08T07:14:31.111852+00:00",
+  "verdict": "QC PASS",
+  "all_checks_pass": true,
+  "failed_checks": [],
+  "synthetic_embeddings": {
+    "path": "embeddings/gte/synthetic/response_embeddings.npy",
+    "shape": [
+      800,
+      768
+    ],
+    "dtype": "float32",
+    "row_ids_count": 800,
+    "metadata": {
+      "embedding_model": "alibaba-nlp-community/gte-base-en-v1.5",
+      "embedding_dimension": 768,
+      "normalized": true,
+      "dataset_path": "dataset/combined/synthetic/sycaudit_synthetic_800.csv",
+      "dataset_row_count": 800,
+      "batch_size": 32,
+      "response_embeddings_path": "embeddings/gte/synthetic/response_embeddings.npy",
+      "pooling_method": "cls",
+      "id_column": "id",
+      "dataset_id_hash": "71b85be80d7f417f33301938a7a3874457a47f6911d15c68579e57c8adfa1b7e",
+      "max_length": 8192,
+      "parent_real_embeddings_path": "embeddings/gte/response_embeddings.npy",
+      "pipeline_source": "scripts/generate_gte_embeddings.py (config + helpers imported)",
+      "synthetic_all_true": true,
+      "construction_timestamp": "2026-10-08T07:14:00.544560+00:00"
+    }
+  },
+  "synthetic_stats": {
+    "mean": -0.0022207482252269983,
+    "std": 0.03601599112153053,
+    "min": -0.4709739089012146,
+    "max": 0.1807927042245865,
+    "norm_min": 0.9999998807907104,
+    "norm_mean": 1.0,
+    "norm_max": 1.0000001192092896
+  },
+  "real_gte_stats_reference": {
+    "mean": -0.0022811146918684244,
+    "std": 0.03601221740245819,
+    "min": -0.6655251383781433,
+    "max": 0.19996243715286255,
+    "norm_min": 0.9999998211860657,
+    "norm_mean": 1.0,
+    "norm_max": 1.0000001192092896
+  },
+  "protected_artifacts": {
+    "dataset/combined/combined_evaluator_dataset.csv": "3901aa493f786a21",
+    "embeddings/bge/prompt_embeddings.npy": "47064575e60b514d",
+    "embeddings/bge/response_embeddings.npy": "861a6b14b0690cee",
+    "embeddings/bge/metadata.json": "21f6bbf6545c2e68",
+    "embeddings/gte/response_embeddings.npy": "4d83cafbe6228c5a",
+    "embeddings/gte/metadata.json": "fd638080975e73a1",
+    "embeddings/bge/features/response_only.npy": "861a6b14b0690cee",
+    "embeddings/bge/features/prompt_response.npy": "614f100feac9c2e2",
+    "embeddings/bge/features/prompt_response_difference.npy": "63bcef13875f4603",
+    "embeddings/bge/features/full_interaction.npy": "4384952a69bc74e2",
+    "embeddings/bge/features/metadata.json": "3a47d8bc2c06c12f",
+    "ml/analysis/annotated_3322.csv": "4eb76dc66f09021a",
+    "ml/splits/split_assignments.csv": "5aa81487616ad539",
+    "ml/splits/split_manifest.json": "24ec51d7273f0549"
+  },
+  "checks": {
+    "protected_artifacts_unchanged": {
+      "pass": true,
+      "detail": "14 files checked"
+    },
+    "synthetic_csv_800_rows": {
+      "pass": true,
+      "detail": "rows=800"
+    },
+    "synthetic_ids_unique": {
+      "pass": true,
+      "detail": "unique=800"
+    },
+    "synthetic_id_namespace": {
+      "pass": true,
+      "detail": "first=syn_p1_0001 last=syn_p2_0400"
+    },
+    "shape_800x768": {
+      "pass": true,
+      "detail": "shape=(800, 768)"
+    },
+    "dtype_float32": {
+      "pass": true,
+      "detail": "dtype=float32"
+    },
+    "all_finite": {
+      "pass": true,
+      "detail": "nan=0 inf=0"
+    },
+    "no_all_zero_vectors": {
+      "pass": true,
+      "detail": "zero_rows=0"
+    },
+    "metadata_row_ids_match_csv_order": {
+      "pass": true,
+      "detail": "row_ids=800 csv=800 first_mismatch=None"
+    },
+    "metadata_id_hash_matches": {
+      "pass": true,
+      "detail": "hash=71b85be80d7f417f"
+    },
+    "metadata_model": {
+      "pass": true,
+      "detail": "alibaba-nlp-community/gte-base-en-v1.5"
+    },
+    "metadata_pooling_cls": {
+      "pass": true,
+      "detail": "cls"
+    },
+    "metadata_normalized": {
+      "pass": true,
+      "detail": "True"
+    },
+    "metadata_dim": {
+      "pass": true,
+      "detail": "768"
+    },
+    "metadata_batch_size": {
+      "pass": true,
+      "detail": "32"
+    },
+    "stats_comparable_to_real": {
+      "pass": true,
+      "detail": "syn std=0.036016 vs real std=0.036012 (diagnostic only; embeddings NOT modified)"
+    }
+  }
+}
