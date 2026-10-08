@@ -9,6 +9,33 @@
 
 ---
 
+> ## ⚠️ SUPERSEDED SECTIONS — read before relying on this document
+>
+> This document was written at HEAD `267222e` (2026-10-03) and is **partly out of date**. Its
+> dataset/rubric analysis (§0–§11) remains accurate and is retained as the historical record.
+> The sections below are **superseded by the current repository state** and must not be used to
+> decide what exists:
+>
+> | Section | Says | Actual state now |
+> |---|---|---|
+> | §1.2, §2, §13 | "ML grader **NOT TRAINED**. No features, embeddings, splits, classifiers, tuning, or evaluation exist." | **Superseded.** 6 trained runs exist in `ml/training/runs/` (4 baselines + 2 smoke tests, CPU), BGE embeddings in `embeddings/bge/`, a frozen split in `ml/splits/`, and features in `embeddings/bge/features/`. See `ml/splits/split_manifest.json` and each run's `run_manifest.json`. |
+> | §9 | Batch 04 "**not annotated**… No output checkpoints exist yet" | **Superseded.** Batch 04 is in progress at **1810 / 2500** — see `dataset/combined/ollama_annotation/batch_04/checkpoint.json` (1810 successful / 2500 expected). Resume with `src/batch_04_runner.py`. |
+> | §12.3 | "There is **no Ollama runner yet**. That is the next thing to build." | **Superseded.** The runner exists: `src/annotation_runner.py` (production) and `src/batch_04_runner.py` (Batch 04). |
+> | §6.5, §19 | "Remaining after Batch 04 = **1450**" | **Arithmetically still correct**, but 690 Batch 04 records remain unannotated (2500 − 1810), so the true remaining figure is now lower. Recompute before use. |
+> | §15 "Exact next steps" | Build the runner; annotate Batch 04; then the remaining 1450 | **Steps 3–4 are done / in progress.** Re-derive next steps from the checkpoint file. |
+>
+> **Still authoritative and unchanged:** the rubric in force (**v2.0.1 FROZEN**), §0.1–§0.2 (the
+> 5100-row parent pool is `dataset/combined/combined_evaluator_dataset.csv`; the `sycaudit__` /
+> `ishika__` ID-namespace normalisation rule), §16 (frozen files), §17.7 (seven directories are
+> committed as gitlinks with no `.gitmodules`), and §6.4 (never merge the source corpora).
+>
+> **Newer, load-bearing document for the ML pipeline:** `ml/splits/split_manifest.json` (split
+> provenance and freeze policy) and the per-run `ml/training/runs/*/run_manifest.json` files
+> (feature set, seed, alignment checks). The ML-ready dataset reconciliation is performed by
+> `scripts/analyze_annotated_dataset.py`.
+
+---
+
 ## 0. THREE FINDINGS THAT SUPERSEDE EARLIER ASSUMPTIONS
 
 A new OpenCode instance has repeatedly misread this repository. Three things in this document

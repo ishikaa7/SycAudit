@@ -42,4 +42,5 @@ dependencies = [
     "tqdm>=4.70.0",
     "transformers>=5.14.1",
     "uvicorn[standard]>=0.52.1",
+    "xgboost>=3.4.1",
 ]

@@ -7,13 +7,19 @@ representations, hyperparameter tuning, focal loss, independent five-model
 baselines, architecture comparisons, and Gemini embeddings are explicitly OUT
 of scope.
 
-The frozen inputs (ml/analysis/annotated_3322.csv, ml/splits/split_assignments.csv,
-embeddings/bge/features/*.npy + metadata.json) are read-only.  The frozen split
-is used exactly as-is; nothing is re-split.  The test split is NEVER used in
-this phase (only train + validation).
+The frozen inputs (annotated dataset, split assignment, and embeddings/bge/
+features/*.npy + metadata.json) are read-only.  Their paths are taken from
+``--annotated-csv`` / ``--split-csv`` (defaulting to the frozen V1 pair), so the
+same CLI runs the historical V1 split and the newer V2 split without any code
+change.  The frozen split is used exactly as-is; nothing is re-split.  The test
+split is NEVER used in this phase (only train + validation).
+
+All row counts reported below are derived from the loaded dataset and split, so
+no dataset-size constant is baked into this script.
 
 Run dirs are created under ml/training/runs/ and are never overwritten unless
---force is given.
+--force is given.  The default run name carries a suffix derived from the split
+path, so a V2 run can never collide with a historical V1 run directory.
 """
 
 from __future__ import annotations
@@ -46,6 +52,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="response_only",
         help="BGE feature representation (only response_only is run in this phase).",
     )
+    p.add_argument(
+        "--annotated-csv",
+        default=tr.dataset.ANNOTATED_CSV,
+        help="Annotated dataset CSV relative to the repository root "
+        f"(default: {tr.dataset.ANNOTATED_CSV}).",
+    )
+    p.add_argument(
+        "--split-csv",
+        default=tr.dataset.SPLIT_CSV,
+        help="Frozen split assignment CSV relative to the repository root "
+        f"(default: {tr.dataset.SPLIT_CSV}).",
+    )
     p.add_argument("--smoke-test", action="store_true", help="Run a tiny smoke training run.")
     p.add_argument("--run-name", default=None, help="Run directory name (default: auto).")
     p.add_argument("--epochs", type=int, default=None, help="Override max_epochs.")
@@ -73,6 +91,29 @@ def repo_root() -> Path:
     except (subprocess.CalledProcessError, FileNotFoundError) as exc:
         raise SystemExit(f"ERROR: cannot locate repository root: {exc}") from exc
     return Path(out.stdout.strip())
+
+
+def default_run_name(
+    args: argparse.Namespace, feature_name: str, split_csv: str
+) -> str:
+    """Run-directory name for these arguments.
+
+    An explicit ``--run-name`` always wins.  Otherwise the name is suffixed by
+    a tag derived from the split path: ``split_assignments.csv`` -> tag ``""``
+    (historical V1 names are unchanged); ``split_assignments_v2.csv`` -> tag
+    ``"v2"``.  The tag is derived from the path itself, so a newer split gets a
+    distinct run directory and can never overwrite a historical run.
+    """
+    if args.run_name:
+        return args.run_name
+    stem = Path(split_csv).name
+    if stem.endswith(".csv"):
+        stem = stem[:-4]
+    prefix = "split_assignments"
+    remainder = stem[len(prefix):] if stem.startswith(prefix) else stem
+    tag = remainder.lstrip("_")
+    name = f"smoke_{feature_name}" if args.smoke_test else f"{feature_name}_seed{args.seed}"
+    return f"{name}_{tag}" if tag else name
 
 
 def setup_determinism(seed: int, device: torch.device) -> dict:
@@ -193,7 +234,7 @@ def main(argv: list[str] | None = None) -> int:
     cfg.device = device.type
 
     # ---- run directory (never silently overwritten) ---- #
-    run_name = args.run_name or (f"smoke_{feature_name}" if args.smoke_test else f"{feature_name}_seed{args.seed}")
+    run_name = default_run_name(args, feature_name, args.split_csv)
     out_dir = root / RUN_DIR / run_name
     if out_dir.exists() and any(out_dir.iterdir()):
         if not args.force:
@@ -222,18 +263,64 @@ def main(argv: list[str] | None = None) -> int:
     # ---- preflight alignment (fails loudly) ---- #
     print("\n[1/5] Preflight alignment + safety checks")
     x_full, _ = tr.dataset.load_feature_matrix(root, feature_name)
-    report = tr.dataset.preflight_alignment(root, x=x_full, feature_name=feature_name)
-    for attr, label, expected in (
-        ("annotated_rows", "annotated rows == 3323", 3323),
-        ("split_rows", "split rows == 3323", 3323),
-        ("feature_rows", "feature rows == 5100", 5100),
-        ("train_count", "train == 2345", 2345),
-        ("validation_count", "validation == 489", 489),
-        ("test_count", "test == 489", 489),
-        ("mapped_unique", "unique canonical ids mapped", 3323),
+    report = tr.dataset.preflight_alignment(
+        root,
+        x=x_full,
+        feature_name=feature_name,
+        annotated_csv=args.annotated_csv,
+        split_csv=args.split_csv,
+    )
+    n_total = report.annotated_rows
+    n_train = report.train_count
+    n_val = report.validation_count
+    n_test = report.test_count
+    n_sum = n_train + n_val + n_test
+    print(f"  annotated dataset: {args.annotated_csv}")
+    print(f"  split assignment : {args.split_csv}")
+    print(f"  Total: {n_total}")
+    print(f"  Train: {n_train}")
+    print(f"  Validation: {n_val}")
+    print(f"  Test: {n_test}")
+    # Size-independent invariants: they must hold for any frozen dataset/split
+    # pair, so no dataset-size constant is asserted here.
+    for label, ok, detail in (
+        (
+            "annotated rows == split rows",
+            report.annotated_rows == report.split_rows,
+            f"{report.annotated_rows} vs {report.split_rows}",
+        ),
+        (
+            "split rows == sum(train, validation, test)",
+            report.split_rows == n_sum,
+            f"{report.split_rows} vs {n_sum}",
+        ),
+        (
+            "unique canonical ids mapped == annotated rows",
+            report.mapped_unique == report.annotated_rows,
+            f"{report.mapped_unique} vs {report.annotated_rows}",
+        ),
+        (
+            "dataset/split id coverage match",
+            bool(report.id_coverage_match),
+            "exact" if report.id_coverage_match else "mismatch",
+        ),
+        (
+            "no duplicate canonical ids",
+            report.duplicate_annotated_ids == 0 and report.duplicate_split_ids == 0,
+            f"annotated={report.duplicate_annotated_ids} split={report.duplicate_split_ids}",
+        ),
+        (
+            "no invalid split names",
+            len(report.invalid_split_names) == 0,
+            ",".join(report.invalid_split_names) or "none",
+        ),
+        (
+            "feature rows == parent dataset rows (frozen)",
+            report.feature_rows == 5100,
+            report.feature_rows,
+        ),
     ):
-        status = "PASS" if getattr(report, attr) == expected else "FAIL"
-        print(f"  [{status}] {label} ({getattr(report, attr)})")
+        print(f"  [{'PASS' if ok else 'FAIL'}] {label} ({detail})")
     print(f"  [{'PASS' if report.feature_dtype == 'float32' else 'FAIL'}] feature dtype == float32 ({report.feature_dtype})")
     print(f"  [{'PASS' if report.feature_nan == 0 else 'FAIL'}] selected-subset NaN count == 0 ({report.feature_nan})")
     print(f"  [{'PASS' if report.feature_inf == 0 else 'FAIL'}] selected-subset Inf count == 0 ({report.feature_inf})")
@@ -243,10 +330,27 @@ def main(argv: list[str] | None = None) -> int:
 
     # ---- datasets (test excluded) ---- #
     print("\n[2/5] Building train/validation datasets")
-    datasets, _ = tr.dataset.build_datasets(root, feature_name, use_test=False)
+    datasets, _ = tr.dataset.build_datasets(
+        root,
+        feature_name,
+        use_test=False,
+        annotated_csv=args.annotated_csv,
+        split_csv=args.split_csv,
+    )
     train_ds, val_ds = datasets["train"], datasets["validation"]
-    assert train_ds.X.shape == (2345, cfg.input_dim)
-    assert val_ds.X.shape == (489, cfg.input_dim)
+    # Shape invariants are checked against what was actually loaded, not a
+    # historical dataset size.
+    assert train_ds.X.shape == (n_train, cfg.input_dim), (
+        f"train feature matrix {tuple(train_ds.X.shape)} != ({n_train}, {cfg.input_dim})"
+    )
+    assert val_ds.X.shape == (n_val, cfg.input_dim), (
+        f"validation feature matrix {tuple(val_ds.X.shape)} != ({n_val}, {cfg.input_dim})"
+    )
+    assert len(train_ds) == n_train and len(val_ds) == n_val
+    assert len(train_ds) + len(val_ds) == n_total - n_test
+    assert train_ds.X.dtype == torch.float32 and val_ds.X.dtype == torch.float32
+    assert train_ds.y.shape == (n_train, len(tr.config.FACETS))
+    assert val_ds.y.shape == (n_val, len(tr.config.FACETS))
     train_loader = tr.dataset.make_loader(train_ds, cfg.batch_size, shuffle=True, seed=cfg.seed)
     val_loader = tr.dataset.make_loader(val_ds, cfg.batch_size, shuffle=False, seed=cfg.seed)
     print(f"  train={len(train_ds)} val={len(val_ds)}  (test split NOT loaded)")
@@ -313,6 +417,14 @@ def main(argv: list[str] | None = None) -> int:
     history = result.history
     config_dict = cfg.to_dict()
     config_dict["script_version"] = SCRIPT_VERSION
+    config_dict["annotated_csv"] = args.annotated_csv
+    config_dict["split_csv"] = args.split_csv
+    config_dict["split_counts"] = {
+        "total": n_total,
+        "train": n_train,
+        "validation": n_val,
+        "test": n_test,
+    }
     validation_metrics = {
         "best_epoch": result.best_epoch,
         "mean_macro_f1": primary,
@@ -327,7 +439,16 @@ def main(argv: list[str] | None = None) -> int:
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "repository_head": head,
         "mode": "smoke_test" if args.smoke_test else "train",
+        "run_name": run_name,
         "feature": feature_name,
+        "annotated_csv": args.annotated_csv,
+        "split_csv": args.split_csv,
+        "split_counts": {
+            "total": n_total,
+            "train": n_train,
+            "validation": n_val,
+            "test": n_test,
+        },
         "input_dim": cfg.input_dim,
         "device": device.type,
         "device_checks": device_checks,

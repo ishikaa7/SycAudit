@@ -54,6 +54,7 @@ sentencepiece
 safetensors
 torch
 scikit-learn
+xgboost
 numpy
 pandas
 joblib
