@@ -1,4 +1,4 @@
-import { FACET_DEFS, facetFillPct, scoreHex } from "../../utils/scoring.js";
+import { FACET_DEFS, facetFillPct, PALETTE, scoreHex } from "../../utils/scoring.js";
 import { formatBackScore } from "../../utils/scoring.js";
 
 /**
@@ -13,16 +13,16 @@ export default function FacetBars({ score, max = 5 }) {
         const present = typeof raw === "number" && Number.isFinite(raw);
         const value = present ? Math.min(max, Math.max(0, raw)) : 0;
         const pct = present ? facetFillPct(value) : 0;
-        const hex = present ? scoreHex(value) : "#d6d3d1";
+        const hex = present ? scoreHex(value) : PALETTE.grid;
         return (
           <div key={facet.key} className="flex items-center gap-2.5">
             <span
-              className="w-[104px] shrink-0 truncate text-xs text-stone-500"
+              className="w-[104px] shrink-0 truncate text-xs text-slate-500"
               title={facet.label}
             >
               {facet.label}
             </span>
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-cream-200">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-200">
               {present ? (
                 <div
                   className="h-full origin-left animate-grow-in rounded-full"
@@ -30,7 +30,7 @@ export default function FacetBars({ score, max = 5 }) {
                 />
               ) : null}
             </div>
-            <span className="w-10 shrink-0 text-right text-xs font-semibold tabular-nums text-stone-700">
+            <span className="w-10 shrink-0 text-right text-xs font-semibold tabular-nums text-slate-700">
               {present ? formatBackScore(value, 2) : "N/A"}
             </span>
           </div>

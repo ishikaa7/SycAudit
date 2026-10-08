@@ -3,107 +3,149 @@ import SubmissionHeader from "../components/results/SubmissionHeader.jsx";
 import PageHeader from "../components/ui/PageHeader.jsx";
 import Notice from "../components/ui/Notice.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
-import { FACET_DEFS } from "../utils/scoring.js";
+import DisagreementChart from "../components/evaluation/DisagreementChart.jsx";
+import {
+  EVALUATION_METRIC_COLUMNS,
+  EvaluationMetricsTable,
+  FacetMetricsTable,
+} from "../components/evaluation/MetricsTable.jsx";
+import { summarizeSubmission, toDisplayScore } from "../utils/scoring.js";
 
 /**
- * The API exposes no human-reference annotations, so every metric below is
- * rendered as N/A. The structure is intentionally complete: the tables, rows
- * and labels a fully-instrumented build would need are all present, with the
- * cells honestly unavailable rather than invented.
+ * Metrics describes the quality and reliability of the SycAudit EVALUATOR
+ * itself. It is not a model comparison and not a result summary — comparing
+ * models across variants is Model Comparison's job.
+ *
+ * Backend gap, stated plainly: the API stores model-generated scores only. It
+ * exposes no human gold labels, no evaluator-performance figures (exact
+ * agreement, Cohen's kappa, precision, recall, F1) and no per-facet
+ * disagreement tallies. Every such cell below therefore renders "Not
+ * available". The structure is preserved so it can be filled in if such data is
+ * ever added, and nothing is estimated to fill a gap.
  */
-const OVERALL_METRICS = [
-  { key: "exact_agreement", label: "Exact Agreement" },
-  { key: "cohens_kappa", label: "Cohen's Kappa" },
-  { key: "precision", label: "Precision" },
-  { key: "recall", label: "Recall" },
-  { key: "f1", label: "F1 Score" },
-];
-
-const DISAGREEMENT_ROWS = [
-  { key: "model_lower", label: "Model < Human" },
-  { key: "same", label: "Same" },
-  { key: "model_higher", label: "Model > Human" },
-];
-
-function NaMetric({ label }) {
-  return (
-    <div className="rounded-xl border border-stone-200 bg-cream-50 p-4">
-      <p className="text-[12.5px] font-semibold text-stone-600">{label}</p>
-      <p className="mt-2 text-[26px] font-bold leading-none tabular-nums text-stone-300">N/A</p>
-      <p className="meta-text mt-2">Not exposed by the API</p>
-    </div>
-  );
-}
-
 export default function MetricsPage() {
   const { submission } = useSubmissionContext();
+  const stats = summarizeSubmission(submission);
 
   return (
     <div className="animate-fade-up">
       <PageHeader
         eyebrow="Metrics & evaluation"
-        title="Human-reference evaluation"
-        subtitle="Agreement of the model scorer against human gold annotations for this submission."
+        title="Metrics"
+        subtitle="How well the SycAudit evaluator itself performs, against human reference labels."
       />
 
       <SubmissionHeader submission={submission} />
 
       <div className="mb-6">
-        <Notice tone="warning" title="Human-reference evaluation metrics are unavailable for this submission because the current API does not expose human gold annotations.">
-          The backend returns model-generated scores only. Exact agreement, Cohen's kappa,
-          precision, recall, F1, per-facet positive counts and disagreement tallies have no
-          source in the response payload, so they are shown as N/A rather than estimated.
+        <Notice tone="warning" title="No human reference data is available from the API">
+          The backend stores model-generated scores only. It returns no human gold annotations and
+          no evaluator-performance endpoint, so exact agreement, Cohen&apos;s kappa, precision,
+          recall, F1, per-facet positive counts and disagreement tallies all have no source in this
+          response payload. They are shown as <span className="font-semibold">Not available</span>{" "}
+          rather than estimated.
         </Notice>
       </div>
 
-      {/* Overall metric tiles */}
-      <section className="mb-6">
+      {/* What the run actually contains — real observed numbers */}
+      <section className="mb-8">
         <div className="mb-3">
-          <h2 className="section-title">Overall metrics</h2>
-          <p className="section-sub">Model scorer versus human gold labels.</p>
+          <h2 className="section-title">Observed in this run</h2>
+          <p className="section-sub">
+            Counts derived from the scores this submission stored. These are real values, kept
+            separate from evaluator-quality metrics above and below.
+          </p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {OVERALL_METRICS.map((m) => (
-            <NaMetric key={m.key} label={m.label} />
+
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {[
+            { label: "Responses Stored", value: stats.responseCount, hint: "In this payload" },
+            { label: "Responses Scored", value: stats.scoredCount, hint: "Carrying a score" },
+            { label: "Models Compared", value: stats.modelCount, hint: "Distinct models" },
+            { label: "Variants Generated", value: stats.variantCount, hint: "Prompt framings" },
+            { label: "Failed Calls", value: stats.failedCount, hint: "Recorded as failed" },
+          ].map((t) => (
+            <div key={t.label} className="card p-4">
+              <p className="text-[12.5px] font-semibold text-slate-600">{t.label}</p>
+              <p className="mt-2 text-[26px] font-bold leading-none tabular-nums text-slate-900">
+                {t.value}
+              </p>
+              <p className="meta-text mt-2">{t.hint}</p>
+            </div>
           ))}
         </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              label: "Mean Score",
+              back: stats.meanScore,
+              hint: `Mean of ${stats.scoredCount} stored score${stats.scoredCount === 1 ? "" : "s"}`,
+            },
+            {
+              label: "Lowest Observed",
+              back: stats.minScore,
+              hint: "Lowest stored score in this run",
+            },
+            {
+              label: "Highest Observed",
+              back: stats.maxScore,
+              hint: "Highest stored score in this run",
+            },
+            {
+              label: "Score Spread",
+              back: stats.scoreRange,
+              hint: "Highest minus lowest",
+            },
+          ].map((t) => {
+            const v = toDisplayScore(t.back);
+            return (
+              <div key={t.label} className="card p-4">
+                <p className="text-[12.5px] font-semibold text-slate-600">{t.label}</p>
+                <p
+                  className={`mt-2 text-[26px] font-bold leading-none tabular-nums ${
+                    v === null ? "text-slate-300" : "text-slate-900"
+                  }`}
+                >
+                  {v === null ? "N/A" : v.toFixed(1)}
+                </p>
+                <p className="meta-text mt-2">{t.hint}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="meta-text mt-3">
+          Scores are shown on the 0–100 display scale (backend 0–5 × 20). Lower means less
+          sycophantic. Confidence is reported exactly as stored because the backend documents no
+          scale for it and the current scoring rule engine does not populate it — this run stores{" "}
+          {stats.confidenceCount > 0 ? stats.meanConfidence : "none"}.
+        </p>
       </section>
 
-      {/* Per-facet table */}
+      {/* Evaluation metrics */}
       <section className="mb-6">
         <div className="mb-3">
-          <h2 className="section-title">Per-facet agreement</h2>
-          <p className="section-sub">Positive counts and kappa for each SycAudit facet.</p>
+          <h2 className="section-title">Evaluation metrics</h2>
+          <p className="section-sub">
+            SycAudit scorer versus human gold labels, for this submission.
+          </p>
         </div>
-        <div className="card overflow-hidden">
-          <div className="scroll-x">
-            <table className="w-full min-w-[620px] border-collapse">
-              <thead className="border-b border-stone-100 bg-cream-50">
-                <tr>
-                  <th className="table-head">Facet</th>
-                  <th className="table-head text-right">Human +ve</th>
-                  <th className="table-head text-right">Model +ve</th>
-                  <th className="table-head text-right">Kappa</th>
-                  <th className="table-head text-right">Exact Agreement</th>
-                </tr>
-              </thead>
-              <tbody>
-                {FACET_DEFS.map((f) => (
-                  <tr key={f.key} className="border-b border-stone-100 last:border-0 hover:bg-cream-50">
-                    <td className="table-cell">
-                      <span className="font-semibold text-stone-700">{f.id}</span>
-                      <span className="ml-2 text-stone-600">{f.label}</span>
-                    </td>
-                    <td className="table-num text-stone-400">N/A</td>
-                    <td className="table-num text-stone-400">N/A</td>
-                    <td className="table-num text-stone-400">N/A</td>
-                    <td className="table-num text-stone-400">N/A</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <EvaluationMetricsTable metrics={[]} />
+        <p className="meta-text mt-2">
+          Columns kept in place: {EVALUATION_METRIC_COLUMNS.map((c) => c.label).join(", ")}.
+        </p>
+      </section>
+
+      {/* Facet-wise performance */}
+      <section className="mb-6">
+        <div className="mb-3">
+          <h2 className="section-title">Facet-wise performance</h2>
+          <p className="section-sub">
+            Per-facet agreement between the model scorer and human judgement.
+          </p>
         </div>
+        <FacetMetricsTable metrics={[]} />
       </section>
 
       {/* Disagreement analysis */}
@@ -111,27 +153,17 @@ export default function MetricsPage() {
         <div className="mb-3">
           <h2 className="section-title">Disagreement analysis</h2>
           <p className="section-sub">
-            Where the model scorer diverges from the human judgement.
+            Per facet, where the model scorer diverges from the human judgement.
           </p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {DISAGREEMENT_ROWS.map((d) => (
-            <div key={d.key} className="rounded-xl border border-stone-200 bg-white p-4 shadow-card">
-              <p className="text-[12.5px] font-semibold text-stone-600">{d.label}</p>
-              <p className="mt-2 text-[26px] font-bold leading-none tabular-nums text-stone-300">N/A</p>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-cream-200">
-                <div className="h-full w-0 rounded-full bg-stone-200" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <DisagreementChart rows={[]} />
       </section>
 
       <EmptyState
         compact
         icon="alert"
-        title="No evaluation chart is shown"
-        subtitle="Charts would require a human-reference label set. Rather than draw invented distributions, this section stays empty until the API exposes gold annotations."
+        title="No evaluator-reliability chart is shown"
+        subtitle="Reliability curves and score distributions would require a human-reference label set. Rather than draw an invented distribution, this section stays empty until the API exposes gold annotations."
       />
     </div>
   );

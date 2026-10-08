@@ -200,7 +200,8 @@ def repo_root() -> Path:
 
 
 def read_feature_metadata(root: Path) -> dict:
-    meta_path = root / FEATURES_DIR / "metadata.json"
+    features_dir = repo_root() / FEATURES_DIR
+    meta_path = features_dir / "metadata.json"
     if not meta_path.exists():
         raise AlignmentError(f"Missing feature metadata: {meta_path}")
     with meta_path.open("r", encoding="utf-8-sig") as fh:
@@ -211,7 +212,7 @@ def load_feature_matrix(root: Path, feature_name: str) -> tuple[np.ndarray, list
     """Load a frozen feature matrix + its ordered row IDs with hard checks."""
     if feature_name not in FEATURE_DIMENSIONS:
         raise ValueError(f"Unknown feature representation {feature_name!r}.")
-    features_dir = root / FEATURES_DIR
+    features_dir = repo_root() / FEATURES_DIR
     npy_path = features_dir / f"{feature_name}.npy"
     if not npy_path.exists():
         raise AlignmentError(f"Missing frozen feature matrix: {npy_path}")

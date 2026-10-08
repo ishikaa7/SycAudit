@@ -16,7 +16,7 @@ export default function AppLayout() {
   }, [location.pathname]);
 
   return (
-    <div className="no-overflow flex min-h-screen bg-cream-100">
+    <div className="no-overflow flex min-h-screen bg-surface-50">
       {/* Persistent sidebar on large screens */}
       <div className="sticky top-0 hidden h-screen lg:block">
         <Sidebar isAdmin={isAdmin} />
@@ -29,7 +29,7 @@ export default function AppLayout() {
             type="button"
             aria-label="Close navigation"
             onClick={() => setNavOpen(false)}
-            className="absolute inset-0 animate-reveal bg-stone-900/25"
+            className="absolute inset-0 animate-reveal bg-slate-900/25"
           />
           <div className="relative h-full w-[232px] animate-slide-down">
             <Sidebar isAdmin={isAdmin} onNavigate={() => setNavOpen(false)} />

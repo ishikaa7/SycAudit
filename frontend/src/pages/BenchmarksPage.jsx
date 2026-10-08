@@ -36,8 +36,8 @@ export default function BenchmarksPage() {
           },
         ].map((c) => (
           <div key={c.title} className="card p-5">
-            <p className="text-[13px] font-semibold text-stone-800">{c.title}</p>
-            <p className="mt-1.5 text-[12.5px] leading-relaxed text-stone-500">{c.body}</p>
+            <p className="text-[13px] font-semibold text-slate-800">{c.title}</p>
+            <p className="mt-1.5 text-[12.5px] leading-relaxed text-slate-500">{c.body}</p>
           </div>
         ))}
       </div>

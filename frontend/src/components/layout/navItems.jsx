@@ -2,6 +2,9 @@ const NAV = [
   { to: "/dashboard", label: "New Analysis", icon: "sparkle" },
   { to: "/results", label: "Results", icon: "check" },
   { to: "/comparison", label: "Model Comparison", icon: "chart" },
+  { to: "/metrics", label: "Metrics", icon: "gauge" },
+  { to: "/analysis", label: "Sycophancy Analysis", icon: "search" },
+  { to: "/prototype", label: "Response Comparison", icon: "chart" },
   { to: "/benchmarks", label: "Benchmarks", icon: "flag" },
   { to: "/history", label: "History", icon: "clock" },
 ];
@@ -39,6 +42,22 @@ export function NavIcon({ name, className = "h-4 w-4" }) {
         <rect x="6" y="11" width="3" height="6" rx="0.8" />
         <rect x="11.5" y="7" width="3" height="10" rx="0.8" />
         <rect x="17" y="13.5" width="3" height="3.5" rx="0.8" />
+      </svg>
+    );
+  }
+  if (name === "gauge") {
+    return (
+      <svg {...common}>
+        <path d="M5 17.5a8.5 8.5 0 1 1 14 0" />
+        <path d="m12 13.5 3.5-3.8" />
+      </svg>
+    );
+  }
+  if (name === "search") {
+    return (
+      <svg {...common}>
+        <circle cx="10.8" cy="10.8" r="6.3" />
+        <path d="m15.6 15.6 3.4 3.4" />
       </svg>
     );
   }

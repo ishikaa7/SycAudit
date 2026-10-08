@@ -1,0 +1,271 @@
+{
+  "generated_utc": "2026-10-08T02:56:13.096235+00:00",
+  "audit_only": true,
+  "part_1_row_count": 400,
+  "part_2_row_count": 400,
+  "combined_row_count": 800,
+  "id_uniqueness": {
+    "unique_ids": 800,
+    "part1_sequence_ok": true,
+    "part2_sequence_ok": true,
+    "duplicate_ids": []
+  },
+  "category_distribution": {
+    "actual": {
+      "F5_ONLY": 300,
+      "F2_ONLY": 150,
+      "F2_F5": 200,
+      "CONTROL": 150
+    },
+    "expected": {
+      "F5_ONLY": 300,
+      "F2_ONLY": 150,
+      "F2_F5": 200,
+      "CONTROL": 150
+    },
+    "match": true
+  },
+  "f2_distribution": {
+    "actual": {
+      "0": 450,
+      "1": 176,
+      "2": 174
+    },
+    "expected": {
+      "0": 450,
+      "1": 176,
+      "2": 174
+    },
+    "match": true,
+    "mismatches": {}
+  },
+  "f5_distribution": {
+    "actual": {
+      "0": 300,
+      "1": 250,
+      "2": 250
+    },
+    "expected": {
+      "0": 300,
+      "1": 250,
+      "2": 250
+    },
+    "match": true,
+    "mismatches": {}
+  },
+  "f2_f5_matrix": {
+    "actual": {
+      "F2=0,F5=0": 150,
+      "F2=0,F5=1": 150,
+      "F2=0,F5=2": 150,
+      "F2=1,F5=0": 76,
+      "F2=1,F5=1": 50,
+      "F2=1,F5=2": 50,
+      "F2=2,F5=0": 74,
+      "F2=2,F5=1": 50,
+      "F2=2,F5=2": 50
+    },
+    "expected": {
+      "F2=0,F5=0": 150,
+      "F2=0,F5=1": 150,
+      "F2=0,F5=2": 150,
+      "F2=1,F5=0": 76,
+      "F2=1,F5=1": 50,
+      "F2=1,F5=2": 50,
+      "F2=2,F5=0": 74,
+      "F2=2,F5=1": 50,
+      "F2=2,F5=2": 50
+    },
+    "match": true,
+    "mismatches": {}
+  },
+  "f1_distribution": {
+    "0": 800
+  },
+  "f3_distribution": {
+    "0": 800
+  },
+  "f4_distribution": {
+    "0": 800
+  },
+  "metadata_validation": {
+    "target_mismatches": 0,
+    "synthetic_flag_mismatches": 0,
+    "source_dataset_mismatches_vs_part_spec": 0,
+    "generation_method_mismatches_vs_part_spec": 0,
+    "part_1_actual": {
+      "source_dataset": "synthetic",
+      "generation_method": "controlled_synthetic_generation",
+      "synthetic": "true"
+    },
+    "part_2_actual": {
+      "source_dataset": "synthetic_p2",
+      "generation_method": "llm_curated",
+      "synthetic": "True"
+    },
+    "combined_output": {
+      "source_dataset": "synthetic",
+      "generation_method": "controlled_synthetic_generation",
+      "synthetic": "true/True (unchanged)"
+    },
+    "sample_violations": []
+  },
+  "empty_null_count": 0,
+  "exact_duplicate_count": {
+    "duplicate_ids": 0,
+    "duplicate_prompts_normalized": 0,
+    "duplicate_responses_raw": 0,
+    "duplicate_pairs_normalized": 0,
+    "cross_part_exact_normalized_texts": 0,
+    "real_dataset_exact_pairs": 0,
+    "real_dataset_normalized_texts": 0
+  },
+  "near_duplicate_count": {
+    "cross_part_jaccard_ge_0.5": 0,
+    "pairs": []
+  },
+  "real_dataset_overlap_count": {
+    "exact_pairs": 0,
+    "normalized_texts": 0
+  },
+  "real_dataset_sha256": "3901aa493f786a21aea4ac93334c5b246a92b674ee727ecf44a0f9bb8520904a",
+  "real_dataset_sha256_after": "3901aa493f786a21aea4ac93334c5b246a92b674ee727ecf44a0f9bb8520904a",
+  "checks": {
+    "real_dataset_hash_prefix": {
+      "pass": true,
+      "detail": "prefix=3901aa493f786a21"
+    },
+    "part1_row_count_400": {
+      "pass": true,
+      "detail": "400"
+    },
+    "part2_row_count_400": {
+      "pass": true,
+      "detail": "400"
+    },
+    "combined_row_count_800": {
+      "pass": true,
+      "detail": "800"
+    },
+    "required_columns_part1": {
+      "pass": true,
+      "detail": "missing=[]"
+    },
+    "required_columns_part2": {
+      "pass": true,
+      "detail": "missing=[]"
+    },
+    "part1_id_sequence": {
+      "pass": true,
+      "detail": "first='syn_p1_0001' last='syn_p1_0400'"
+    },
+    "part2_id_sequence": {
+      "pass": true,
+      "detail": "first='syn_p2_0001' last='syn_p2_0400'"
+    },
+    "all_800_ids_unique": {
+      "pass": true,
+      "detail": "unique=800 dups=[]"
+    },
+    "category_rules_every_row": {
+      "pass": true,
+      "detail": "violations=0 []"
+    },
+    "metadata_per_part_sources": {
+      "pass": true,
+      "detail": "violations=0"
+    },
+    "combined_metadata_normalization_defined": {
+      "pass": true,
+      "detail": "combined output normalizes both parts to synthetic/controlled_synthetic_generation"
+    },
+    "metadata_targets_and_flags": {
+      "pass": true,
+      "detail": "violations=0"
+    },
+    "content_no_empty_nulls": {
+      "pass": true,
+      "detail": "empty_or_null=0 other=[]"
+    },
+    "content_no_label_leakage": {
+      "pass": true,
+      "detail": "hits=0 []"
+    },
+    "content_no_generation_artifacts": {
+      "pass": true,
+      "detail": "hits=0 []"
+    },
+    "category_distribution_exact": {
+      "pass": true,
+      "detail": "actual={'F5_ONLY': 300, 'F2_ONLY': 150, 'F2_F5': 200, 'CONTROL': 150} expected={'F5_ONLY': 300, 'F2_ONLY': 150, 'F2_F5': 200, 'CONTROL': 150}"
+    },
+    "f2_f5_matrix_exact": {
+      "pass": true,
+      "detail": "mismatches={}"
+    },
+    "f2_distribution_exact": {
+      "pass": true,
+      "detail": "mismatches={}"
+    },
+    "f5_distribution_exact": {
+      "pass": true,
+      "detail": "mismatches={}"
+    },
+    "f1_zero_all": {
+      "pass": true,
+      "detail": "{0: 800}"
+    },
+    "f3_zero_all": {
+      "pass": true,
+      "detail": "{0: 800}"
+    },
+    "f4_zero_all": {
+      "pass": true,
+      "detail": "{0: 800}"
+    },
+    "no_duplicate_prompts_within_800": {
+      "pass": true,
+      "detail": "dup_norm_prompts=0"
+    },
+    "no_duplicate_responses_within_800": {
+      "pass": true,
+      "detail": "dup_raw_responses=0"
+    },
+    "no_duplicate_pairs_within_800": {
+      "pass": true,
+      "detail": "dup_pairs=0"
+    },
+    "cross_part_exact_normalized_overlap": {
+      "pass": true,
+      "detail": "overlapping_texts=0 sample=[]"
+    },
+    "cross_part_near_duplicates": {
+      "pass": true,
+      "detail": "near_dup_pairs=0 sample=[]"
+    },
+    "real_dataset_exact_pair_overlap": {
+      "pass": true,
+      "detail": "hits=0"
+    },
+    "real_dataset_normalized_overlap": {
+      "pass": true,
+      "detail": "hits=0 sample=[]"
+    },
+    "real_dataset_unchanged_after_audit": {
+      "pass": true,
+      "detail": "before=3901aa493f786a21 after=3901aa493f786a21"
+    },
+    "combined_metadata_normalized": {
+      "pass": true,
+      "detail": "rows=800 bad_meta=[]"
+    },
+    "combined_content_identical_to_sources": {
+      "pass": true,
+      "detail": "field_diffs=0 []"
+    }
+  },
+  "failed_checks": [],
+  "all_qc_checks_pass": true,
+  "final_verdict": "QC PASS",
+  "combined_file_created": true
+}

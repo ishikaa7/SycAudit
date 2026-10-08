@@ -2,12 +2,12 @@ import { severityLabel, scoreBadgeClass } from "../../utils/scoring.js";
 
 /**
  * Severity chip. Bands come from the central utility
- * (ratio < 0.4 low, < 0.7 mid, >= 0.7 high) — olive / butter / burgundy.
+ * (ratio < 0.4 low, < 0.7 mid, >= 0.7 high) — emerald / amber / red.
  */
 export default function ScoreBadge({ backScore, label, className = "" }) {
   if (typeof backScore !== "number" || !Number.isFinite(backScore)) {
     return (
-      <span className="inline-flex items-center rounded-lg bg-stone-100 px-2 py-1 text-[11px] font-semibold text-stone-400">
+      <span className="inline-flex items-center rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-400">
         N/A
       </span>
     );

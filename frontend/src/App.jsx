@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout.jsx";
 import SubmissionLayout from "./components/layout/SubmissionLayout.jsx";
+import ActiveSubmissionRoute from "./components/layout/ActiveSubmissionRoute.jsx";
 import AuthGuard from "./components/ProtectedRoute.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
@@ -13,16 +14,16 @@ const VariantsPage = lazy(() => import("./pages/VariantsPage.jsx"));
 const AnalysisPage = lazy(() => import("./pages/AnalysisPage.jsx"));
 const MetricsPage = lazy(() => import("./pages/MetricsPage.jsx"));
 const ComparisonPage = lazy(() => import("./pages/ComparisonPage.jsx"));
-const ResultsIndexPage = lazy(() => import("./pages/ResultsIndexPage.jsx"));
-const GlobalComparisonPage = lazy(() => import("./pages/GlobalComparisonPage.jsx"));
-const BenchmarksPage = lazy(() => import("./pages/BenchmarksPage.jsx"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage.jsx"));
 const AdminPage = lazy(() => import("./pages/AdminPage.jsx"));
+const BenchmarksPage = lazy(() => import("./pages/BenchmarksPage.jsx"));
+const PrototypeIndexPage = lazy(() => import("./pages/PrototypeIndexPage.jsx"));
+const PrototypeAnalysisPage = lazy(() => import("./pages/PrototypeAnalysisPage.jsx"));
 
 function PageLoader() {
   return (
-    <div className="flex min-h-[40vh] items-center justify-center gap-2.5 text-sm text-stone-400">
-      <Spinner className="h-4 w-4 text-burgundy-700" />
+    <div className="flex min-h-[40vh] items-center justify-center gap-2.5 text-sm text-slate-400">
+      <Spinner className="h-4 w-4 text-indigo-700" />
       Loading…
     </div>
   );
@@ -41,37 +42,63 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route
             path="/results"
-            element={withLoader(<ResultsIndexPage />)}
+            element={
+              <ActiveSubmissionRoute
+                segment=""
+                eyebrow="Overview"
+                title="Results"
+                subtitle="The recommended response for your most recent completed analysis."
+                icon="check"
+              />
+            }
           />
           <Route
             path="/comparison"
-            element={withLoader(<GlobalComparisonPage />)}
+            element={
+              <ActiveSubmissionRoute
+                segment="comparison"
+                eyebrow="Model comparison"
+                title="Model Comparison"
+                subtitle="Compare how each model responded within a single analysis."
+              />
+            }
           />
-          <Route path="/benchmarks" element={withLoader(<BenchmarksPage />)} />
+          <Route
+            path="/metrics"
+            element={
+              <ActiveSubmissionRoute
+                segment="metrics"
+                eyebrow="Metrics & evaluation"
+                title="Metrics"
+                subtitle="Evaluator-quality metrics for the active analysis."
+                icon="gauge"
+              />
+            }
+          />
+          <Route
+            path="/analysis"
+            element={
+              <ActiveSubmissionRoute
+                segment="analysis"
+                eyebrow="Sycophancy analysis"
+                title="Sycophancy Analysis"
+                subtitle="Detailed analysis of model behaviour for the active analysis."
+                icon="search"
+              />
+            }
+          />
+          <Route path="/prototype" element={withLoader(<PrototypeIndexPage />)} />
           <Route path="/history" element={withLoader(<HistoryPage />)} />
+          <Route path="/benchmarks" element={withLoader(<BenchmarksPage />)} />
+          <Route path="/prototype" element={withLoader(<PrototypeAnalysisPage />)} />
 
-          {/* Result sections for a single submission; loaded once, shared via context. */}
           <Route element={<SubmissionLayout />}>
-            <Route
-              path="/submissions/:id"
-              element={withLoader(<SubmissionDetailsPage />)}
-            />
-            <Route
-              path="/submissions/:id/variants"
-              element={withLoader(<VariantsPage />)}
-            />
-            <Route
-              path="/submissions/:id/analysis"
-              element={withLoader(<AnalysisPage />)}
-            />
-            <Route
-              path="/submissions/:id/metrics"
-              element={withLoader(<MetricsPage />)}
-            />
-            <Route
-              path="/submissions/:id/comparison"
-              element={withLoader(<ComparisonPage />)}
-            />
+            <Route path="/submissions/:id" element={withLoader(<SubmissionDetailsPage />)} />
+            <Route path="/submissions/:id/variants" element={withLoader(<VariantsPage />)} />
+            <Route path="/submissions/:id/analysis" element={withLoader(<AnalysisPage />)} />
+            <Route path="/submissions/:id/metrics" element={withLoader(<MetricsPage />)} />
+            <Route path="/submissions/:id/comparison" element={withLoader(<ComparisonPage />)} />
+            <Route path="/submissions/:id/prototype-analysis" element={withLoader(<PrototypeAnalysisPage />)} />
           </Route>
         </Route>
       </Route>

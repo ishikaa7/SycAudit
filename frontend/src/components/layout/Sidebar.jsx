@@ -1,9 +1,14 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import NAV, { NavIcon } from "./navItems.jsx";
+import {
+  activeSubmissionFromPath,
+  isNavItemActive,
+  navTarget,
+} from "../../utils/activeSubmission.js";
 
 function BrandMark() {
   return (
-    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-burgundy-700 text-white shadow-sm">
+    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-indigo-600 text-white shadow-sm">
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -24,7 +29,7 @@ function BrandMark() {
 /** Small branded card with a minimal abstract wave. Deliberately understated. */
 function BrandCard() {
   return (
-    <div className="relative overflow-hidden rounded-xl bg-burgundy-700 p-3.5 text-white">
+    <div className="relative overflow-hidden rounded-xl bg-indigo-600 p-3.5 text-white">
       <svg
         viewBox="0 0 160 48"
         className="absolute inset-x-0 bottom-0 h-10 w-full opacity-25"
@@ -54,24 +59,32 @@ function BrandCard() {
 }
 
 export default function Sidebar({ isAdmin, onNavigate }) {
+  const { pathname } = useLocation();
+
+  // The active submission is read from the URL, not from React state, so it
+  // survives a refresh. While one is open, the four analysis items point at its
+  // own sections — that is what keeps navigation from silently snapping back to
+  // the newest run. The item set itself is identical either way.
+  const activeId = activeSubmissionFromPath(pathname).id;
+
   return (
-    <aside className="flex h-full w-[232px] shrink-0 flex-col border-r border-stone-200/80 bg-white">
+    <aside className="flex h-full w-[232px] shrink-0 flex-col border-r border-slate-200/80 bg-white">
       <div className="flex items-center gap-2.5 px-4 py-4">
         <BrandMark />
-        <span className="text-[15px] font-bold tracking-tight text-stone-900">SycAudit</span>
+        <span className="text-[15px] font-bold tracking-tight text-slate-900">SycAudit</span>
       </div>
 
       <nav className="flex-1 space-y-0.5 px-2.5 py-2" aria-label="Main">
         {NAV.map((item) => (
-          <NavLink
+          <Link
             key={item.to}
-            to={item.to}
+            to={navTarget(item.to, activeId)}
             onClick={onNavigate}
-            className={({ isActive }) => `nav-item ${isActive ? "nav-item-active" : ""}`}
+            className={`nav-item ${isNavItemActive(item.to, pathname) ? "nav-item-active" : ""}`}
           >
             <NavIcon name={item.icon} />
             <span className="truncate">{item.label}</span>
-          </NavLink>
+          </Link>
         ))}
 
         {isAdmin && (

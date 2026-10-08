@@ -32,6 +32,13 @@ literal value "unframed".
   explicitly NOT a SCHIS02 fact id.
 
 ## 6. Why stochastic SCHIS02 responses are retained but must not be treated as
+
+
+
+
+
+
+
 independent experimental facts
 T>0 rows (temperature 0.3/0.7) are repeated stochastic draws of the same underlying
 (fact, framing, model) cell. They are kept to aid response-diversity analysis, but the

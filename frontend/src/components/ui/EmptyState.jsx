@@ -13,13 +13,13 @@ export default function EmptyState({
   compact = false,
 }) {
   const toneRing =
-    tone === "warning" ? "border-butter-200 bg-butter-50" : "border-stone-200 bg-cream-50";
+    tone === "warning" ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-surface-50";
 
   return (
     <div
       className={`flex flex-col items-center justify-center rounded-card border border-dashed ${toneRing} text-center ${compact ? "px-5 py-8" : "px-6 py-14"}`}
     >
-      <span className="mb-3 grid h-10 w-10 place-items-center rounded-xl border border-stone-200 bg-white text-stone-400 shadow-card">
+      <span className="mb-3 grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-400 shadow-card">
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -57,9 +57,9 @@ export default function EmptyState({
           )}
         </svg>
       </span>
-      <p className="text-[14.5px] font-semibold text-stone-800">{title}</p>
+      <p className="text-[14.5px] font-semibold text-slate-800">{title}</p>
       {subtitle && (
-        <p className="mt-1.5 max-w-md text-[13px] leading-relaxed text-stone-500">{subtitle}</p>
+        <p className="mt-1.5 max-w-md text-[13px] leading-relaxed text-slate-500">{subtitle}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>

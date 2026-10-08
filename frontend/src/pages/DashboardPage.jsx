@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createSubmission, getSubmissions } from "../api/submissions.js";
+import { createSubmission } from "../api/submissions.js";
 import { errorMessage } from "../api/client.js";
-import { normalizeList, timeAgo, truncate } from "../utils/format.js";
 import PageHeader from "../components/ui/PageHeader.jsx";
 import Notice from "../components/ui/Notice.jsx";
-import StatusBadge from "../components/ui/StatusBadge.jsx";
 import Spinner from "../components/ui/Spinner.jsx";
 
 /** Matches the backend MAX_PROMPT_CHARS guard. */
@@ -22,26 +20,6 @@ export default function DashboardPage() {
   const [prompt, setPrompt] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [recent, setRecent] = useState([]);
-  const [loadingRecent, setLoadingRecent] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    getSubmissions()
-      .then((res) => {
-        if (!active) return;
-        setRecent(normalizeList(res.data).slice(0, 4));
-      })
-      .catch(() => {
-        if (active) setRecent([]);
-      })
-      .finally(() => {
-        if (active) setLoadingRecent(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const remaining = MAX_PROMPT_CHARS - prompt.length;
   const tooLong = remaining < 0;
@@ -68,8 +46,8 @@ export default function DashboardPage() {
     <div className="animate-fade-up">
       <PageHeader
         eyebrow="New analysis"
-        title="Analyse a prompt for sycophancy"
-        subtitle="Submit a single prompt. SycAudit generates four framings of it, collects model responses, and scores agreement, flattery, disagreement avoidance, preference alignment, and unnecessary validation."
+        title="New Sycophancy Analysis"
+        subtitle="Submit a single prompt. SycAudit generates the prompt framings, collects model responses, and scores excessive agreement, flattery, avoiding disagreement, preference alignment and unnecessary validation."
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -88,19 +66,21 @@ export default function DashboardPage() {
             maxLength={MAX_PROMPT_CHARS + 200}
             rows={7}
             placeholder="Paste the prompt you want to audit…"
-            className="w-full resize-y rounded-xl border border-stone-200 bg-cream-50 px-3.5 py-3 text-[14px] leading-relaxed text-stone-800 transition-all duration-150 placeholder:text-stone-400 hover:border-stone-300 focus:border-burgundy-300 focus:bg-white"
+            className="w-full resize-y rounded-xl border border-slate-200 bg-surface-50 px-3.5 py-3 text-[14px] leading-relaxed text-slate-800 transition-all duration-150 placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-300 focus:bg-white"
           />
 
           <div className="mt-2 flex items-center justify-between gap-3">
             <p
               className={`text-[11.5px] tabular-nums ${
-                tooLong ? "font-semibold text-burgundy-700" : "text-stone-400"
+                tooLong ? "font-semibold text-indigo-700" : "text-slate-400"
               }`}
             >
               {prompt.length} / {MAX_PROMPT_CHARS} characters
               {tooLong && ` — ${Math.abs(remaining)} over the limit`}
             </p>
-            <p className="text-[11.5px] text-stone-400">Four prompt framings will be generated</p>
+            <p className="text-[11.5px] text-slate-400">
+              The server decides how many prompt framings to generate
+            </p>
           </div>
 
           {error && (
@@ -150,7 +130,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="mt-6 border-t border-stone-100 pt-4">
+          <div className="mt-6 border-t border-slate-100 pt-4">
             <p className="eyebrow">Try an example</p>
             <div className="mt-2.5 flex flex-col gap-1.5">
               {EXAMPLE_PROMPTS.map((p) => (
@@ -158,7 +138,7 @@ export default function DashboardPage() {
                   key={p}
                   type="button"
                   onClick={() => setPrompt(p)}
-                  className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-left text-[12.5px] leading-relaxed text-stone-600 transition-all duration-150 hover:border-burgundy-200 hover:bg-burgundy-50 hover:text-burgundy-900"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-[12.5px] leading-relaxed text-slate-600 transition-all duration-150 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-900"
                 >
                   {p}
                 </button>
@@ -174,57 +154,35 @@ export default function DashboardPage() {
               {[
                 "Your prompt is stored as the original framing.",
                 "Three further framings — question, third person, hedged — are derived.",
-                "Models answer all four framings.",
+                "Models answer each framing.",
                 "Each response is scored on the five SycAudit facets.",
               ].map((step, i) => (
                 <li key={step} className="flex gap-2.5">
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-burgundy-50 text-[11px] font-bold text-burgundy-700">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-indigo-50 text-[11px] font-bold text-indigo-700">
                     {i + 1}
                   </span>
-                  <span className="text-[12.5px] leading-relaxed text-stone-600">{step}</span>
+                  <span className="text-[12.5px] leading-relaxed text-slate-600">{step}</span>
                 </li>
               ))}
             </ol>
           </div>
 
-          <div className="card p-5">
-            <p className="eyebrow">Recent runs</p>
-            {loadingRecent ? (
-              <div className="mt-3 flex items-center gap-2 text-xs text-stone-400">
-                <Spinner className="h-3.5 w-3.5" />
-                Loading…
-              </div>
-            ) : recent.length === 0 ? (
-              <p className="mt-3 text-[12.5px] leading-relaxed text-stone-400">
-                No analyses yet. Your submissions will appear here.
-              </p>
-            ) : (
-              <ul className="mt-3 flex flex-col gap-2">
-                {recent.map((s) => (
-                  <li key={s.submission_id ?? s.id}>
-                    <Link
-                      to={`/submissions/${s.submission_id ?? s.id}`}
-                      className="block rounded-lg border border-stone-200 px-3 py-2 transition-all duration-150 hover:border-burgundy-200 hover:bg-burgundy-50"
-                    >
-                      <p className="truncate text-[12.5px] font-medium text-stone-700">
-                        {truncate(s.original_prompt, 68)}
-                      </p>
-                      <div className="mt-1.5 flex items-center justify-between gap-2">
-                        <StatusBadge status={s.status} />
-                        <span className="meta-text">{timeAgo(s.created_at)}</span>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link
-              to="/history"
-              className="mt-3 inline-block text-[12px] font-medium text-burgundy-700 hover:text-burgundy-800"
-            >
-              View all history →
-            </Link>
-          </div>
+          {/*
+            Previous analyses are deliberately NOT listed here. History is the one
+            place in the application that browses runs, so this page only points
+            at it; Results, Model Comparison, Metrics and Sycophancy Analysis all
+            act on the active submission instead.
+          */}
+          <Link
+            to="/history"
+            className="card card-hover flex items-center justify-between gap-3 p-4"
+          >
+            <div>
+              <p className="text-[13px] font-semibold text-slate-800">History</p>
+              <p className="meta-text mt-0.5">Open a previous analysis</p>
+            </div>
+            <span className="shrink-0 text-[11.5px] font-medium text-indigo-700">View →</span>
+          </Link>
         </aside>
       </div>
     </div>

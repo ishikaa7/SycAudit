@@ -36,33 +36,33 @@ export default function ScoreReadout({
     <div className={className}>
       <div className="flex items-baseline gap-2">
         <span
-          className={`${s.num} font-bold tabular-nums tracking-tight ${hasValue ? scoreTextClass(backScore) : "text-stone-300"}`}
+          className={`${s.num} font-bold tabular-nums tracking-tight ${hasValue ? scoreTextClass(backScore) : "text-slate-300"}`}
         >
           {hasValue ? display.toFixed(1) : "N/A"}
         </span>
-        <span className={`${s.unit} font-medium text-stone-400`}>/ 100</span>
+        <span className={`${s.unit} font-medium text-slate-400`}>/ 100</span>
       </div>
 
-      {caption && <p className="mt-1 text-xs text-stone-500">{caption}</p>}
+      {caption && <p className="mt-1 text-xs text-slate-500">{caption}</p>}
 
       {showDisclosure && (
         <div className="mt-1.5">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="text-[11px] font-medium text-stone-400 underline decoration-stone-300 underline-offset-2 transition-colors hover:text-stone-600"
+            className="text-[11px] font-medium text-slate-400 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-600"
           >
             {open ? "Hide raw score" : "Show raw score"}
           </button>
           {open && (
-            <p className="mt-1.5 animate-slide-down text-[11.5px] leading-relaxed text-stone-500">
+            <p className="mt-1.5 animate-slide-down text-[11.5px] leading-relaxed text-slate-500">
               Raw score:{" "}
-              <span className="font-semibold tabular-nums text-stone-700">
+              <span className="font-semibold tabular-nums text-slate-700">
                 {formatBackScore(backScore)}
               </span>{" "}
               / {BACKEND_SCORE_MAX}
               <br />
-              <span className="text-stone-400">
+              <span className="text-slate-400">
                 Overall score: normalized from backend 0–5 score
               </span>
             </p>
