@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import useSubmissionList from "../hooks/useSubmissionList.js";
 import PageHeader from "../components/ui/PageHeader.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
@@ -8,7 +8,7 @@ import { formatDateTime, truncate } from "../utils/format.js";
 import { completedSubmissionsNewestFirst, submissionRoute } from "../utils/activeSubmission.js";
 
 /**
- * HISTORY — the one place in the application that lists previous analyses.
+ * HISTORY â€” the one place in the application that lists previous analyses.
  * This page remains the entry point for selecting an existing audit.
  */
 export default function HistoryPage() {
@@ -41,7 +41,7 @@ export default function HistoryPage() {
       {loading ? (
         <div className="flex min-h-[40vh] items-center justify-center gap-2.5 text-sm text-slate-400">
           <Spinner className="h-4 w-4 text-indigo-700" />
-          Loading history…
+          Loading historyâ€¦
         </div>
       ) : completed.length === 0 ? (
         <EmptyState
@@ -71,7 +71,7 @@ export default function HistoryPage() {
               return (
                 <Link
                   key={id}
-                  to={submissionRoute(id, "prototype-analysis")}
+                  to={submissionRoute(id, "analysis")}
                   className="card card-hover flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
@@ -81,7 +81,7 @@ export default function HistoryPage() {
                     <p className="meta-text mt-1.5">Created {formatDateTime(s.created_at)}</p>
                   </div>
                   <span className="shrink-0 text-[12px] font-semibold text-indigo-700">
-                    Open SycAudit Analysis →
+                    Open SycAudit Analysis â†’
                   </span>
                 </Link>
               );

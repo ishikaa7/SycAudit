@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+﻿import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout.jsx";
 import SubmissionLayout from "./components/layout/SubmissionLayout.jsx";
@@ -15,14 +15,16 @@ const AnalysisPage = lazy(() => import("./pages/AnalysisPage.jsx"));
 const MetricsPage = lazy(() => import("./pages/MetricsPage.jsx"));
 const ComparisonPage = lazy(() => import("./pages/ComparisonPage.jsx"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage.jsx"));
+          <Route path="/response-comparison" element={withLoader(<ResponseComparisonPage />)} />
 const AdminPage = lazy(() => import("./pages/AdminPage.jsx"));
 const BenchmarksPage = lazy(() => import("./pages/BenchmarksPage.jsx"));
+const ResponseComparisonPage = lazy(() => import("./pages/ResponseComparisonPage.jsx"));
 
 function PageLoader() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center gap-2.5 text-sm text-slate-400">
       <Spinner className="h-4 w-4 text-indigo-700" />
-      Loading…
+      Loadingâ€¦
     </div>
   );
 }
@@ -109,5 +111,7 @@ export default function App() {
     </Routes>
   );
 }
+
+
 
 

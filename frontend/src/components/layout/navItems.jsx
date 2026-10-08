@@ -1,10 +1,10 @@
-const NAV = [
+﻿const NAV = [
   { to: "/dashboard", label: "New Analysis", icon: "sparkle" },
   { to: "/results", label: "Results", icon: "check" },
   { to: "/comparison", label: "Model Comparison", icon: "chart" },
   { to: "/metrics", label: "Metrics", icon: "gauge" },
   { to: "/analysis", label: "Sycophancy Analysis", icon: "search" },
-  { to: "/prototype", label: "Response Comparison", icon: "chart" },
+  { to: "/comparison", label: "Response Comparison", icon: "chart" },
   { to: "/benchmarks", label: "Benchmarks", icon: "flag" },
   { to: "/history", label: "History", icon: "clock" },
 ];
