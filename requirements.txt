@@ -11,6 +11,7 @@ sqlalchemy
 psycopg[binary]
 asyncpg
 alembic
+greenlet
 
 # =========================
 # Environment & Configuration
